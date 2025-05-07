@@ -46,7 +46,7 @@ class GenerateScramble implements ShouldQueue
             '-s',
             $this->scramble,
             '-o',
-            '../../public/img/scrambles/scramble.svg'
+            '../../public/img/scrambles/scramble-temp.svg'
         ]);
         $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
         $process->run();

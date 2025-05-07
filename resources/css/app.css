@@ -1,2 +1,5 @@
 @import 'bootstrap';
 @import './style.css';
+@import url('https://cdn.cubing.net/v0/css/@cubing/icons/css');
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+@import 'boxicons';

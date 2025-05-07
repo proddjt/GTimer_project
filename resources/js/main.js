@@ -7,19 +7,27 @@ let countdown = 1000;
 let userReady = null;
 let timerFunction = null;
 let resetBtn = document.querySelector('#reset');
-let puzzleSelect = document.querySelector('#puzzle-select');
+let penaltyBtn = document.querySelector('#penaltyBtn');
+let dnfBtn = document.querySelector('#dnfBtn');
+let collapseItems = document.querySelectorAll('.collapse-item');
 let actualTime = 0.00;
+let setLed = document.querySelector('#set');
+let goLed = document.querySelector('#go');
+let leftHand = document.querySelector('#leftHand');
+let rightHand = document.querySelector('#rightHand');
 
 document.addEventListener('DOMContentLoaded', () => {
     timerPage.classList.add('d-none');
     loader.classList.add('d-block');
     Livewire.dispatch('firstLoad');
+    initializeBootstrap();
 })
 
 Livewire.on('DOMRefresh', () => {
     setTimeout(() => {
         let timer = document.querySelector('#timer');
         timer.innerText = actualTime.toFixed(2);
+        initializeBootstrap();
     }, 10);
 })
 
@@ -31,52 +39,91 @@ Livewire.on('scrambleGenerated', () => {
     setTimeout(() => {
         let timer = document.querySelector('#timer');
         timer.innerText = actualTime.toFixed(2);
+        initializeBootstrap();
     }, 10);
 })
 
-puzzleSelect.addEventListener('change', () => {
-    timerPage.classList.add('d-none');
-    timerPage.classList.remove('d-block');
-    loader.classList.add('d-block');
-    loader.classList.remove('d-none');
-    Livewire.dispatch('firstLoad');
-})
+collapseItems.forEach(item => {
+    item.addEventListener('click', () => {
+        timerPage.classList.add('d-none');
+        timerPage.classList.remove('d-block');
+        loader.classList.add('d-block');
+        loader.classList.remove('d-none');
+        Livewire.dispatch('setPuzzle', {puzzle: item.getAttribute('puzzle')});
+        Livewire.dispatch('firstLoad');
+        Livewire.dispatch('puzzleChanged');
+    })
+});
     
 document.addEventListener('keydown', (e) => {
     isPressed[e.code] = true;
+    if (isPressed['ControlLeft']){
+        leftHand.classList.remove('hand-inactive');
+        leftHand.classList.add('hand-active');
+    }
+    if (isPressed['ControlRight']){
+        rightHand.classList.remove('hand-inactive');
+        rightHand.classList.add('hand-active');
+    }
     if(isPressed['ControlLeft'] == true && isPressed['ControlRight'] == true && userReady == null && timerStart == false && timerFunction == null && timer.innerText == "0.00") {
-        timer.classList.add('red');
+        setLed.classList.add('set-led');
         countdown = 1000;
         userReady = setInterval(() => {
             countdown -= 25;
             if (countdown <= 250) {
-                timer.classList.remove('red');
-                timer.classList.add('green');
+                goLed.classList.add('go-led');
             }
         }, 25);
     }
     if (isPressed['ControlLeft'] == true && isPressed['ControlRight'] == true && timerStart == true) {
         clearInterval(timerFunction);
         actualTime = Number(timer.innerText);
-        Livewire.dispatch('timerStopped', {time: actualTime});
+        setLed.classList.remove('set-led-blink');
+        goLed.classList.remove('go-led-blink');
+        setLed.classList.add('inactive-led');
+        goLed.classList.add('inactive-led');
+        Livewire.dispatch('timerStopped', {time: actualTime.toFixed(2)});
         timerFunction = null;
         timerStart = false;
-        resetBtn.classList.add('d-block');
+        resetBtn.classList.add('d-inline-block');
         resetBtn.classList.remove('d-none');
+        penaltyBtn.classList.add('d-inline-block');
+        penaltyBtn.classList.remove('d-none');
+        dnfBtn.classList.add('d-inline-block');
+        dnfBtn.classList.remove('d-none');
     }
 })
+
 document.addEventListener('keyup', (e) => {
     isPressed[e.code] = false;
+    if (!isPressed['ControlLeft']) {
+        leftHand.classList.remove('hand-active');
+        leftHand.classList.add('hand-inactive');
+    }
+    if (!isPressed['ControlRight']) {
+        rightHand.classList.remove('hand-active');
+        rightHand.classList.add('hand-inactive');
+    }
     if (!isPressed['ControlLeft'] || !isPressed['ControlRight']) {
         clearInterval(userReady);
         userReady = null;
-        timer.classList.remove('red');
-        timer.classList.remove('green');
+        setLed.classList.remove('set-led');
+        goLed.classList.remove('go-led');
+        setLed.classList.add('inactive-led');
+        goLed.classList.add('inactive-led');
         if(countdown <= 250) {
             timerStart = true;
             countdown = 1000;
-            resetBtn.classList.remove('d-block');
+            setLed.classList.remove('inactive-led');
+            setLed.classList.add('set-led-blink');
+            goLed.classList.remove('inactive-led');
+            goLed.classList.add('go-led-blink');
+            resetBtn.classList.remove('d-inline-block');
             resetBtn.classList.add('d-none');
+            penaltyBtn.classList.remove('d-inline-block');
+            penaltyBtn.classList.add('d-none');
+            dnfBtn.classList.remove('d-inline-block');
+            dnfBtn.classList.add('d-none');
             let startTime = 0.00;
             timerFunction = setInterval(() => {
                 startTime += 0.01;
@@ -88,5 +135,25 @@ document.addEventListener('keyup', (e) => {
 
 resetBtn.addEventListener('click', () => {
     actualTime = 0.00
+    timer.innerText = actualTime.toFixed(2);
+})
+
+function initializeBootstrap(){
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    const penaltyModal = document.getElementById('penaltyModal')
+    const dnfModal = document.getElementById('dnfModal')
+    const penaltyBtn = document.getElementById('penaltyBtn')
+    const dnfBtn = document.getElementById('dnfBtn')
+    penaltyModal.addEventListener('shown.bs.modal', () => {
+        penaltyBtn.focus()
+    })
+    dnfModal.addEventListener('shown.bs.modal', () => {
+        dnfBtn.focus()
+    })
+}
+
+Livewire.on('resetTimer', () => {
+    actualTime = 0.00;
     timer.innerText = actualTime.toFixed(2);
 })

@@ -1,9 +1,146 @@
-.red{
-    color: red;
+:root{
+    --bg: #e9ecef;
+    --text: #212529;
+    --text-hov: #343a40;
+    --highlight: #ff8800;
+    --higlight-hov: #ffaa33;
+    --bg-sec: #dee2e6;
+    --text-sec: #909294;
 }
 
-.green{
-    color: green;
+*{
+    font-family: 'Reflow', sans-serif;
+    transition: all 0.2s ease-in-out;
+}
+
+body{
+    background-color: var(--bg);
+    color: var(--text);
+}
+
+.text-highlight{
+    color: var(--highlight);
+}
+
+@font-face {
+    font-family: 'Lack Regular';
+    src: url(../../public/font/Lack-Regular.otf);
+}
+
+button{
+    border: none;
+    color: #e9ecef;
+    padding: 3px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.button-highlight{
+    background-color: var(--highlight);
+
+}
+
+.button-main{
+    background-color: var(--text);
+}
+
+.button-transparent{
+    background-color: transparent;
+    color: var(--text);
+}
+
+.button-highlight:hover{
+    background-color: var(--higlight-hov);
+}
+
+.button-main:hover{
+    background-color: var(--text-hov);
+}
+
+.button-transparent:hover{
+    color: var(--text-hov);
+}
+
+.collapse-item{
+    color: var(--text);
+    text-decoration: none;
+}
+
+.collapse-item:hover{
+    color: var(--highlight);
+}
+
+.tooltip{
+    font-size: 12px;
+}
+
+#timer{
+    font-size: 175px;
+}
+
+#go, #set{
+    width: 20px;
+    height: 20px;
+}
+
+.inactive-led{
+    background-color: #343a40;
+    border: 1px solid #e9ecef;
+}
+
+.set-led{
+    background-color: red;
+}
+
+.go-led{
+    background-color: green;
+}
+
+.go-led-blink{
+    background-color: green;
+    animation: goblink 75ms infinite;
+    animation-delay: 75ms;
+}
+
+.set-led-blink{
+    background-color: red;
+    animation: setblink 75ms infinite;
+}
+
+@keyframes setblink {
+    0% {
+        background-color: red;
+    }
+    50% {
+        background-color: #343a40;
+    }
+    100% {
+        background-color: red;
+    }
+}
+
+@keyframes goblink {
+    0% {
+        background-color: green;
+    }
+    50% {
+        background-color: #343a40;
+    }
+    100% {
+        background-color: green;
+    }
+}
+
+.hand{
+    font-size: 70px;
+}
+
+.hand-inactive{
+    color: var(--text-sec);
+}
+
+.hand-active{
+    color: var(--text);
 }
 
 /* LOADER */
