@@ -1,61 +1,83 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🕒 GTimer - Il timer da speedcuber, fatto da uno speedcuber
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Ciao! 👋 Mi chiamo **Giovanni Tramontano** e questo è **GTimer**, il mio personale progetto di timer WCA completamente sviluppato in **Laravel**! 🚀
 
-## About Laravel
+GTimer prende ispirazione da celebri web app del mondo speedcubing come **CSTimer** e **QQTimer**, ma con un tocco personale (e un pizzico di follia 😄).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🧠 Tech stuff (ma detto semplice)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Questo progetto è sviluppato interamente con:
 
-## Learning Laravel
+- **Laravel** (of course 🧡)
+- **HTML + Bootstrap** per il layout
+- **JavaScript** per tutta la logica del timer
+- **PHP** per il back-end
+- **Livewire** per rendere tutto super dinamico ⚡
+- **Fortify** per la gestione dell’autenticazione
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 🌀 Scramble? Ci pensa TNoodle!
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Per generare scramble in modo realistico, ho integrato **TNoodle CLI**, il tool ufficiale WCA (quello vero, usato in gara 😎).
 
-## Laravel Sponsors
+Lo lancio in **background con Symfony Process**, così il timer si carica super veloce e senza dover aspettare lo scramble ogni volta.  
+Tutto asincrono, tutto fluido 💨
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## ✋ Partenza stile Stackmat
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development/)**
-- **[Active Logic](https://activelogic.com)**
+Niente barra spaziatrice qui!  
+Per far partire (e fermare) il timer devi **premere entrambi i tasti CTRL** ⌨️✋✋
 
-## Contributing
+Proprio come sullo **Stackmat** ufficiale: mani sui sensori → via col tempo → mani di nuovo → tempo fermato!  
+È un dettaglio, ma per chi gareggia davvero… fa tutta la differenza 💪
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## ⚙️ Come provarlo in locale?
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Se vuoi clonar(ti) GTimer e farlo girare sul tuo PC, segui questi step:
 
-## Security Vulnerabilities
+1. Clona il repository
+2. Scarica **[tnoodle-cli da GitHub](https://github.com/SpeedcuberOSS/tnoodle-cli)** e mettilo nella root del progetto (`/tnoodle-cli-win_x64`)
+3. Installa i pacchetti:
+   ```bash
+   composer install
+   npm install
+   ```
+4. Installa **Fortify** e **Livewire**
+5. Migra e seed-a il database:
+   ```bash
+   php artisan migrate --seed
+   ```
+6. Avvia i 3 comandi fondamentali:
+   ```bash
+   php artisan serve        # per il server Laravel
+   npm run dev              # per gli asset front-end
+   php artisan queue:work   # per gestire gli scramble in coda
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Se segui tutto alla lettera, sei pronto a cubare ⏱️🧊
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🎨 Work in progress...
+
+Il progetto è ancora **in fase di sviluppo attivo**!  
+L'obiettivo è realizzare un **frontend sempre più figo e user-friendly**, perfetto per allenarsi, simulare gare o semplicemente divertirsi a cronometrare solve su solve.
+
+---
+
+## ❤️ Supporto & feedback
+
+Hai idee, suggerimenti o vuoi contribuire?  
+Apri una **issue** o mandami una **pull request** — ogni aiuto è super apprezzato!
+
+---
+
+Stay cubed 🤙  
+**Giovanni Tramontano**
