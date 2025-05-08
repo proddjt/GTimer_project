@@ -25,11 +25,23 @@ class CreateNewUser implements CreatesNewUsers
                 'required',
                 'string',
                 'email',
+                'unique:users,email',
                 'max:255',
                 Rule::unique(User::class),
             ],
             'password' => $this->passwordRules(),
-        ])->validate();
+            'password_confirmation' => ['required']
+        ],
+        [
+            'email.unique' => 'L\'email inserita è già in uso',
+            'email.required' => 'Devi inserire un\'email',
+            'password.required' => 'Devi inserire una password',
+            'password_confirmation.required' => 'Devi confermare la password',
+            'password.min' => 'La password deve contenere almeno :min caratteri',
+            'password.confirmed' => 'Le password non corrispondono',
+            'name.required'=>'Devi inserire un nome'
+        ]
+        )->validate();
 
         return User::create([
             'name' => $input['name'],

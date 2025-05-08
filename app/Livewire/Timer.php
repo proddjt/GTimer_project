@@ -45,27 +45,27 @@ class Timer extends Component
     #[On('firstLoad')]
     public function generateFirstScramble()
     {
-        $process = new Process([
-            'tnoodle.bat',
-            'scramble',
-            '-p',
-            $this->puzzle
-        ]);
-        $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
-        $process->run();
-        $this->scramble = str_replace(["\r", "\n"], '', $process->getOutput());
-        $process = new Process([
-            'tnoodle.bat',
-            'draw',
-            '-p',
-            $this->puzzle,
-            '-s',
-            $this->scramble,
-            '-o',
-            '../../public/img/scrambles/scramble.svg'
-        ]);
-        $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
-        $process->run();
+        // $process = new Process([
+        //     'tnoodle.bat',
+        //     'scramble',
+        //     '-p',
+        //     $this->puzzle
+        // ]);
+        // $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
+        // $process->run();
+        // $this->scramble = str_replace(["\r", "\n"], '', $process->getOutput());
+        // $process = new Process([
+        //     'tnoodle.bat',
+        //     'draw',
+        //     '-p',
+        //     $this->puzzle,
+        //     '-s',
+        //     $this->scramble,
+        //     '-o',
+        //     '../../public/img/scrambles/scramble.svg'
+        // ]);
+        // $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
+        // $process->run();
         $this->calculateStatistics();
         $this->dispatch('scrambleGenerated');
         $this->newTempScramble($this->puzzle);

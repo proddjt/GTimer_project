@@ -1,11 +1,13 @@
 :root{
     --bg: #e9ecef;
     --text: #212529;
+    --text-invert: #e9ecef;
     --text-hov: #343a40;
     --highlight: #ff8800;
     --higlight-hov: #ffaa33;
     --bg-sec: #dee2e6;
     --text-sec: #909294;
+    --timer-size: 175px;
 }
 
 *{
@@ -22,6 +24,10 @@ body{
     color: var(--highlight);
 }
 
+.text-main{
+    color: var(--text);
+}
+
 @font-face {
     font-family: 'Lack Regular';
     src: url(../../public/font/Lack-Regular.otf);
@@ -29,7 +35,7 @@ body{
 
 button{
     border: none;
-    color: #e9ecef;
+    color: var(--text-invert);
     padding: 3px 15px;
     border-radius: 5px;
     cursor: pointer;
@@ -37,7 +43,7 @@ button{
 
 .button-highlight{
     background-color: var(--highlight);
-
+    color: var(--text);
 }
 
 .button-main{
@@ -75,7 +81,7 @@ button{
 }
 
 #timer{
-    font-size: 175px;
+    font-size: var(--timer-size);
 }
 
 #go, #set{
@@ -141,6 +147,86 @@ button{
 
 .hand-active{
     color: var(--text);
+}
+
+.main-puzzle{
+    font-size: 120px;
+}
+
+.sec-puzzle{
+    font-size: 50px;
+}
+
+.redirect{
+    text-decoration: dashed underline;
+    color: var(--text);
+}
+
+.redirect:hover{
+    color: var(--highlight);
+}
+
+#showPassword, #showConfirmPassword{
+    cursor: pointer;
+    user-select: none;
+}
+
+.dropdown-menu{
+    background-color: var(--bg-sec);
+}
+
+.dropdown-item{
+    color: var(--text);
+}
+
+.modal-content{
+    background-color: var(--bg-sec);
+    color: var(--text)
+}
+
+.btn-close{
+    color: var(--text);
+}
+
+.puzzle-box{
+    border: 3px solid var(--text);
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px var(--text);
+}
+
+.collapse{
+    border-top: 3px dashed var(--text);
+}
+
+.modal-header{
+    border-bottom: 1px solid var(--text);
+}
+
+.modal-footer{
+    border-top: 1px solid var(--text);
+}
+
+.form-check-input:checked {
+    background-color:var(--highlight);
+    border-color:var(--highlight);
+}
+
+.form-check-input:focus {
+    border-color: #ff880077;
+    outline: 0;
+    box-shadow: 0 0 10px #ff880077;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input{
+    background-color: var(--bg-sec);
+    color: var(--text);
+    border: 1px solid var(--text);
 }
 
 /* LOADER */
@@ -393,4 +479,24 @@ button{
     }
 }
 
+.loadingtext{
+    animation-name: fading-text;
+    animation-duration: 2s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+@keyframes fading-text{
+    0% {
+        opacity: 0.0;
+    }
+    
+    50% {
+        opacity: 1.0;
+    }
+
+    100% {
+        opacity: 0.0;
+    }
+}
 /* END LOADER */
