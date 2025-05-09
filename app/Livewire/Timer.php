@@ -31,6 +31,7 @@ class Timer extends Component
     public $ao100 = null;
     public $bestAo100 = null;
     public $mean = null;
+    public $userTimes;
     public function render()
     {
         return view('livewire.timer');
@@ -40,33 +41,41 @@ class Timer extends Component
         $this->profile = Profile::where('id', 1)->first();
         $this->puzzle = $this->profile->selectedPuzzle;
         $this->scrambleTable = Temp::where('id', 1)->first();
+        $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
     }
 
     #[On('firstLoad')]
     public function generateFirstScramble()
     {
-        // $process = new Process([
-        //     'tnoodle.bat',
-        //     'scramble',
-        //     '-p',
-        //     $this->puzzle
-        // ]);
-        // $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
-        // $process->run();
-        // $this->scramble = str_replace(["\r", "\n"], '', $process->getOutput());
-        // $process = new Process([
-        //     'tnoodle.bat',
-        //     'draw',
-        //     '-p',
-        //     $this->puzzle,
-        //     '-s',
-        //     $this->scramble,
-        //     '-o',
-        //     '../../public/img/scrambles/scramble.svg'
-        // ]);
-        // $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
-        // $process->run();
-        $this->calculateStatistics();
+        $process = new Process([
+            'tnoodle.bat',
+            'scramble',
+            '-p',
+            $this->puzzle
+        ]);
+        $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
+        $process->run();
+        $this->scramble = str_replace(["\r", "\n"], '', $process->getOutput());
+        $process = new Process([
+            'tnoodle.bat',
+            'draw',
+            '-p',
+            $this->puzzle,
+            '-s',
+            $this->scramble,
+            '-o',
+            '../../public/img/scrambles/scramble.svg'
+        ]);
+        $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
+        $process->run();
+        if(Auth::check()){
+            $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
+                return array_values($item->toArray());
+            })->toArray();
+            $this->calculateStatistics($userArray);
+        }else{
+            $this->calculateStatistics($this->tempTimes);
+        }
         $this->dispatch('scrambleGenerated');
         $this->newTempScramble($this->puzzle);
     }
@@ -83,15 +92,34 @@ class Timer extends Component
         if (!Auth::check()) {
             $this->tempTimes = [];
         }
+        $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
+        if(Auth::check()){
+            $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
+                return array_values($item->toArray());
+            })->toArray();
+            $this->calculateStatistics($userArray);
+        }else{
+            $this->calculateStatistics($this->tempTimes);
+        }
         $this->dispatch('DOMRefresh');
     }
 
     #[On('timerStopped')]
     public function newScramble($time){
         if (!Auth::check()) {
-            array_push($this->tempTimes, [$time, date('d-m-Y H:i:s'), $this->scramble, false]);
+            array_push($this->tempTimes, [$time, date('d-m-Y H:i:s'), $this->scramble, false, false]);
+        }else{
+            Auth::user()->times()->create(['time' => $time, 'date' => date('d-m-Y H:i:s'), 'scramble' => $this->scramble, 'hasPenalty' => false, 'hasDNF' => false, 'puzzle' => $this->puzzle]);
         }
-        $this->calculateStatistics();
+        if(Auth::check()){
+            $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
+                return array_values($item->toArray());
+            })->toArray();
+            $this->calculateStatistics($userArray);
+        }else{
+            $this->calculateStatistics($this->tempTimes);
+        }
+        $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
         $this->scramble = $this->scrambleTable->scramble;
         rename(base_path("public\img\scrambles\scramble-temp.svg"), base_path("public\img\scrambles\scramble.svg"));
         $this->newTempScramble($this->puzzle);
@@ -101,100 +129,382 @@ class Timer extends Component
     public function deleteTime($index){
         if (!Auth::check()) {
             unset($this->tempTimes[$index]);
+        }else{
+            $this->userTimes[$index]->delete();
         }
+        if(Auth::check()){
+            $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
+                return array_values($item->toArray());
+            })->toArray();
+            $this->calculateStatistics($userArray);
+        }else{
+            $this->calculateStatistics($this->tempTimes);
+        }
+        $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
         $this->dispatch('DOMRefresh');
     }
 
     #[On('setPuzzle')]
     public function setPuzzle($puzzle){
         $this->puzzle = $puzzle;
+        $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
     }
 
-    public function addPenalty(){
-        if (!Auth::check()) {
-            $this->tempTimes[array_key_last($this->tempTimes)][0] += 2;
-            $this->tempTimes[array_key_last($this->tempTimes)][3] = true;
-        };
+    public function addPenalty($index){
+        if (!Auth::check() && $this->tempTimes[$index][3] == false) {
+            $this->tempTimes[$index][3] = true;
+        }else{
+            $this->userTimes[$index]->update(['hasPenalty' => true]);
+            $this->userTimes[$index]->save();
+        }
+        if(Auth::check()){
+            $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
+                return array_values($item->toArray());
+            })->toArray();
+            $this->calculateStatistics($userArray);
+        }else{
+            $this->calculateStatistics($this->tempTimes);
+        }
+        $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
         $this->dispatch('DOMRefresh');
         $this->dispatch('resetTimer');
     }
 
-    public function setDNF(){
-        if (!Auth::check()) {
-            $this->tempTimes[array_key_last($this->tempTimes)][0] = 'DNF';
-            $this->tempTimes[array_key_last($this->tempTimes)][3] = true;
-        };
+    public function setDNF($index){
+        if (!Auth::check() && $this->tempTimes[$index][4] == false) {
+            $this->tempTimes[$index][4] = true;
+        }else{
+            $this->userTimes[$index]->update(['hasDNF' => true]);
+            $this->userTimes[$index]->save();
+        }
+        if(Auth::check()){
+            $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
+                return array_values($item->toArray());
+            })->toArray();
+            $this->calculateStatistics($userArray);
+        }else{
+            $this->calculateStatistics($this->tempTimes);
+        }
+        $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
         $this->dispatch('DOMRefresh');
         $this->dispatch('resetTimer');
     }
 
-    public function calculateStatistics(){
-        if (count($this->tempTimes) >= 100) {
-            $last100 = array_column(array_slice($this->tempTimes, -100), 0);
-            $min = min($last100);
-            $max = max($last100);
-            $filtered = array_diff($last100, [$min, $max]);
-            $this->Ao100 = floor((array_sum($filtered) / count($filtered)) * 100) / 100;
-            if($this->Ao100 < $this->bestAo100 || !$this->bestAo100){
-                $this->bestAo100 = $this->Ao100;
-            }
-        }
-        if (count($this->tempTimes) >= 50) {
-            $last50 = array_column(array_slice($this->tempTimes, -50), 0);
-            $min = min($last50);
-            $max = max($last50);
-            $filtered = array_diff($last50, [$min, $max]);
-            $this->Ao50 = floor((array_sum($filtered) / count($filtered)) * 100) / 100;
-            if($this->Ao50 < $this->bestAo50 || !$this->bestAo50){
-                $this->bestAo50 = $this->Ao50;
-            }
-        }
-        if (count($this->tempTimes) >= 12) {
-            $last12 = array_column(array_slice($this->tempTimes, -12), 0);
-            $min = min($last12);
-            $max = max($last12);
-            $filtered = array_diff($last12, [$min, $max]);
-            $this->Ao12 = floor((array_sum($filtered) / count($filtered)) * 100) / 100;
-            if($this->Ao12 < $this->bestAo12 || !$this->bestAo12){
-                $this->bestAo12 = $this->Ao12;
-            }
-        }
-        if (count($this->tempTimes) >= 5) {
-            $last5 = array_column(array_slice($this->tempTimes, -5), 0);
-            $min = min($last5);
+    public function calculateStatistics($array){
+        // AO100 AND BEST AO100
+        if (count($array) >= 100) {
+            $last100Times = array_slice($array, -100);
+            $last100 = array_column(array_slice($array, -100), 0);
+            $min = [];
+            $max = [];
             $dnfCount = 0;
-            foreach ($last5 as $time) {
-                if ($time == 'DNF') {
-                    $max = 'DNF';
+            foreach ($last100Times as $time) {
+                if ($time[4] == true) {
+                    $dnfCount++;
+                    if ( $dnfCount < 5){
+                        array_push($max, $time[0]);
+                    }
+                }
+            }
+            if ($dnfCount <= 0) {
+                $max = array_slice(rsort($last100), 0, 5);
+            }
+            if ($dnfCount <= 5) {
+                $min = array_slice(sort($last100), 0, 5);
+                $minMax = array_merge($min, $max);
+                $filtered = array_diff($last100, $minMax);
+                $this->Ao100 = floor((array_sum($filtered) / count($filtered)) * 100) / 100;
+            }else{
+                $this->Ao100 = '--:--';
+            }
+            $this->bestAo100 = null;
+            for ($i = 0; $i <= count($array) - 100; $i++) {
+                $current100Times = array_slice($array, $i, 100);
+                $current100 = array_column($current100Times, 0);
+                $currentMin = [];
+                $currentMax = [];
+                $currentDnfCount = 0;
+                foreach ($current100Times as $time) {
+                    if ($time[4] == true) {
+                        $currentDnfCount++;
+                        if ( $currentDnfCount < 5){
+                            array_push($currentMax, $time[0]);
+                        }
+                    }
+                }
+                if ($currentDnfCount <= 0) {
+                    $currentMax = array_slice(rsort($current100), 0, 5);
+                }
+                if ($currentDnfCount <= 5) {
+                    $currentMin = array_slice(sort($current100), 0, 5);
+                    $currentMinMax = array_merge($currentMin, $currentMax);
+                    $currentFiltered = array_diff($current100, $currentMinMax);
+                    $currentAo100 = floor((array_sum($currentFiltered) / count($currentFiltered)) * 100) / 100;
+                    if ($currentAo100 < $this->bestAo100 || !$this->bestAo100) {
+                        $this->bestAo100 = $currentAo100;
+                    }
+                }
+            }
+        }else{
+            $this->Ao100 = null;
+            $this->bestAo100 = null;
+        }
+
+        // AO50 AND BEST AO50
+        if (count($array) >= 50) {
+            $last50Times = array_slice($array, -50);
+            $last50 = array_column($last50Times, 0);
+            $min = [];
+            $max = [];
+            $dnfCount = 0;
+            foreach ($last50Times as $time) {
+                if ($time[4] == true) {
+                    $dnfCount++;
+                    if ( $dnfCount < 3){
+                        array_push($max, $time[0]);
+                    }
+                }
+            }
+            if ($dnfCount <= 0) {
+                $max = array_slice(rsort($last50), 0, 3);
+            }
+            if ($dnfCount <= 3) {
+                $min = array_slice(sort($last50), 0, 3);
+                $minMax = array_merge($min, $max);
+                $filtered = array_diff($last50, $minMax);
+                $this->Ao50 = floor((array_sum($filtered) / count($filtered)) * 100) / 100;
+            }else{
+                $this->Ao50 = 'DNF';
+            }
+            $this->bestAo50 = null;
+            for ($i = 0; $i <= count($array) - 50; $i++) {
+                $current50Times = array_slice($array, $i, 50);
+                $current50 = array_column($current50Times, 0);
+                $currentMin = [];
+                $currentMax = [];
+                $currentDnfCount = 0;
+                foreach ($current50Times as $time) {
+                    if ($time[4] == true) {
+                        $currentDnfCount++;
+                        if ( $currentDnfCount < 3){
+                            array_push($currentMax, $time[0]);
+                        }
+                    }
+                }
+                if ($currentDnfCount <= 0) {
+                    $currentMax = array_slice(rsort($current50), 0, 3);
+                }
+                if ($currentDnfCount <= 3) {
+                    $currentMin = array_slice(sort($current50), 0, 3);
+                    $currentMinMax = array_merge($currentMin, $currentMax);
+                    $currentFiltered = array_diff($current50, $currentMinMax);
+                    $currentAo50 = floor((array_sum($currentFiltered) / count($currentFiltered)) * 100) / 100;
+                    if($currentAo50 < $this->bestAo50 || !$this->bestAo50){
+                        $this->bestAo50 = $currentAo50;
+                    }
+                }
+            }
+        }else{
+            $this->Ao50 = null;
+            $this->bestAo50 = null;
+        }
+
+        // AO12 AND BEST AO12
+        if (count($array) >= 12) {
+            $last12Times = array_slice($array, -12);
+            $last12 = array_column($last12Times, 0);
+            $min = 0;
+            $max = 0;
+            $dnfCount = 0;
+            foreach ($last12Times as $time) {
+                if ($time[4] == true) {
+                    $max = $time[0];
+                    $dnfCount++;
+                }
+            }
+            if ($dnfCount <= 0) {
+                $max = max($last12);
+            }
+            if ($dnfCount <= 1) {
+                $min = min($last12);
+                $filtered = array_diff($last12, [$min, $max]);
+                $this->Ao12 = floor((array_sum($filtered) / count($filtered)) * 100) / 100;
+            }else{
+                $this->Ao12 = 'DNF';
+            }
+            $this->bestAo12 = null;
+            for ($i = 0; $i <= count($array) - 12; $i++) {
+                $current12Times = array_slice($array, $i, 12);
+                $current12 = array_column($current12Times, 0);
+                $currentMin = 0;
+                $currentMax = 0;
+                $currentDnfCount = 0;
+                foreach ($current12Times as $time) {
+                    if ($time[4] == true) {
+                        $currentMax = $time[0];
+                        $currentDnfCount++;
+                    }
+                }
+                if ($currentDnfCount <= 0) {
+                    $currentMax = max($current12);
+                }
+                if ($currentDnfCount <= 1) {
+                    $currentMin = min($current12);
+                    $currentFiltered = array_diff($current12, [$currentMin, $currentMax]);
+                    $currentAo12 = floor((array_sum($currentFiltered) / count($currentFiltered)) * 100) / 100;
+                    if ($currentAo12 < $this->bestAo12 || !$this->bestAo12) {
+                        $this->bestAo12 = $currentAo12;
+                    }
+                }
+            }
+        }else{
+            $this->Ao12 = null;
+            $this->bestAo12 = null;
+        }
+
+        // AO5 AND BEST AO5
+        if (count($array) >= 5) {
+            $last5Times = array_slice($array, -5);
+            $last5 = array_column($last5Times, 0);
+            $min = 0;
+            $max = 0;
+            $dnfCount = 0;
+            foreach ($last5Times as $time) {
+                if ($time[4] == true) {
+                    $max = $time[0];
                     $dnfCount++;
                 }
             }
             if($dnfCount <= 0){
                 $max = max($last5);
             }
-            if ($dnfCount == 1 || $dnfCount == 0){
+            if ($dnfCount <= 1){
+                $min = min($last5);
                 $filtered = array_diff($last5, [$min, $max]);
                 $this->Ao5 = floor((array_sum($filtered) / count($filtered) * 100)) / 100;
-                if($this->Ao5 < $this->bestAo5 || !$this->bestAo5){
-                    $this->bestAo5 = $this->Ao5;
-                }
             }else{
                 $this->Ao5 = 'DNF';
             }
-        }
-        if (count($this->tempTimes) >= 3) {
-            $last3 = array_column(array_slice($this->tempTimes, -5), 0);
-            $this->mo3 = floor((array_sum($last3) / count($last3)) * 100) / 100;
-            if($this->mo3 < $this->bestMo3 || !$this->bestMo3){
-                $this->bestMo3 = $this->mo3;
+            $this->bestAo5 = null;
+            for ($i = 0; $i <= count($array) - 5; $i++) {
+                $current5Times = array_slice($array, $i, 5);
+                $current5 = array_column($current5Times, 0);
+                $currentMin = 0;
+                $currentMax = 0;
+                $currentDnfCount = 0;
+                foreach ($current5Times as $time) {
+                    if ($time[4] == true) {
+                        $currentMax = $time[0];
+                        $currentDnfCount++;
+                    }
+                }
+                if ($currentDnfCount <= 0) {
+                    $currentMax = max($current5);
+                }
+                if ($currentDnfCount <= 1) {
+                    $currentMin = min($current5);
+                    $currentFiltered = array_diff($current5, [$currentMin, $currentMax]);
+                    $currentAo5 = floor((array_sum($currentFiltered) / count($currentFiltered)) * 100) / 100;
+                    if ($currentAo5 < $this->bestAo5 || !$this->bestAo5) {
+                        $this->bestAo5 = $currentAo5;
+                    }
+                }
             }
+        }else{
+            $this->Ao5 = null;
+            $this->bestAo5 = null;
         }
-        if (count($this->tempTimes) >= 1) {
-            $this->single = $this->tempTimes[array_key_last($this->tempTimes)][0];
-            if ($this->single < $this->bestSingle || !$this->bestSingle) {
-                $this->bestSingle = $this->single;
+
+        // MO3 AND BEST MO3
+        if (count($array) >= 3) {
+            $this->mo3 = null;
+            $last3Times = array_slice($array, -3);
+            $last3 = array_column($last3Times, 0);
+            $sum = 0;
+            foreach ($last3Times as $time) {
+                if ($time[4] == true) {
+                    $this->mo3 = 'DNF';
+                }else if ($time[3] == true) {
+                    $sum += $time[0] + 2;
+                }else{
+                    $sum += $time[0];
+                }
             }
-            $this->mean = floor((array_sum(array_column($this->tempTimes, 0)) / count($this->tempTimes)) * 100) / 100;
+            if ($this->mo3 != 'DNF') {
+                $this->mo3 = floor(($sum / count($last3)) * 100) / 100;
+            }
+            $this->bestMo3 = null;
+            for ($i = 0; $i <= count($array) - 3; $i++) {
+                $current3Times = array_slice($array, $i, 3);
+                $current3 = array_column($current3Times, 0);
+                $currentmo3 = 0;
+                $sum = 0;
+                foreach ($current3Times as $time) {
+                    if ($time[4] == true) {
+                        $currentmo3 = 'DNF';
+                    }else if ($time[3] == true) {
+                        $sum += $time[0] + 2;
+                    }else{
+                        $sum += $time[0];
+                    }
+                }
+                if ($currentmo3 != 'DNF') {
+                    $currentmo3 = floor(($sum / count($current3)) * 100) / 100;
+                    if($currentmo3 < $this->bestMo3 || !$this->bestMo3){
+                        $this->bestMo3 = $currentmo3;
+                    }
+                }
+            }
+        }else{
+            $this->mo3 = null;
+            $this->bestMo3 = null;
+        }
+
+        // SINGLE AND BEST SINGLE
+        if (count($array) >= 1) {
+            if ($array[array_key_last($array)][4] == true) {
+                $this->single = 'DNF';
+            }else if ($array[array_key_last($array)][3] == true) {
+                $this->single = $array[array_key_last($array)][0] + 2;
+            }else{
+                $this->single = $array[array_key_last($array)][0];
+            }
+            $this->bestSingle = null;
+            for ($i = 0; $i < count($array); $i++) {
+                if ($array[$i][4] == false){
+                    if ($array[$i][3] == false) {
+                        if ($array[$i][0] < $this->bestSingle || !$this->bestSingle) {
+                            $this->bestSingle = $array[$i][0];
+                        }
+                    }else{
+                        if ($array[$i][0] + 2 < $this->bestSingle || !$this->bestSingle) {
+                            $this->bestSingle = $array[$i][0] + 2;
+                        }
+                    }
+                }
+            }
+            $count = 0;
+            $sum = 0;
+            foreach ($array as $time) {
+                if ($time[4] == false){
+                    if ($time[3] == true){
+                        $sum += $time[0]+2;
+                        $count++;
+                    }else{
+                        $sum += $time[0];
+                        $count++;
+                    }
+                }
+            }
+            if ($count == 0) {
+                $this->mean = null;
+            }else{
+                $this->mean = floor(($sum / $count) * 100) / 100;
+            }
+        }else{
+            $this->single = null;
+            $this->bestSingle = null;
+            $this->mean = null;
         } 
     }
 }

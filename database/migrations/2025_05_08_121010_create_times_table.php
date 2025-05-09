@@ -12,16 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('times', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
             $table->string('time');
-            $table->string('puzzle');
             $table->string('date');
             $table->text('scramble');
-            $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->boolean('hasPenalty')->default(false);
             $table->boolean('hasDNF')->default(false);
+            $table->string('puzzle');
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->timestamps();
+            $table->id();
         });
     }
 

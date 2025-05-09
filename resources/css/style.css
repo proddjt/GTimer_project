@@ -33,7 +33,7 @@ body{
     src: url(../../public/font/Lack-Regular.otf);
 }
 
-button{
+button , .a-button{
     border: none;
     color: var(--text-invert);
     padding: 3px 15px;

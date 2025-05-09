@@ -20,7 +20,7 @@
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="#">Action</a></li>
                         <li><a class="dropdown-item" id="settingsBtn" data-bs-toggle="modal" data-bs-target="#settingsModal"><i class="fa-solid fa-gear pe-1"></i> Impostazioni</a></li>
-                        <li><a class="dropdown-item" href="{{route('logout')}}"><i class="fa-solid fa-right-from-bracket pe-1"></i> Esci</a></li>
+                        <li><form action="{{route('logout')}}" method="POST">@csrf<button type="submit" class="dropdown-item"><i class="fa-solid fa-right-from-bracket pe-1"></i> Esci</button></form></li>
                     </ul>
                 </div>
                 @endauth
@@ -108,16 +108,20 @@
                         <div class="col-2">Average of 100</div>
                     </div>
                     <div class="row">
-                        <div class="col-2"><span class="fw-semibold">Attuale: </span>@if ($single){{number_format($single, 2)}} @else --:-- @endif <span class="fw-semibold">Migliore: </span>@if ($bestSingle){{number_format($bestSingle, 2)}} @else --:-- @endif</div>
-                        <div class="col-2"><span class="fw-semibold">Attuale: </span>@if ($mo3){{number_format($mo3, 2)}} @else --:-- @endif <span class="fw-semibold">Migliore: </span>@if ($bestMo3){{number_format($bestMo3, 2)}} @else --:-- @endif</div>
-                        <div class="col-2"><span class="fw-semibold">Attuale: </span>@if ($ao5){{number_format($ao5, 2)}} @else --:-- @endif <span class="fw-semibold">Migliore: </span>@if ($bestAo5){{number_format($bestAo5, 2)}} @else --:-- @endif</div>
-                        <div class="col-2"><span class="fw-semibold">Attuale: </span>@if ($ao12){{number_format($ao12, 2)}} @else --:-- @endif <span class="fw-semibold">Migliore: </span>@if ($bestAo12){{number_format($bestAo12, 2)}} @else --:-- @endif</div>
-                        <div class="col-2"><span class="fw-semibold">Attuale: </span>@if ($ao50){{number_format($ao50, 2)}} @else --:-- @endif <span class="fw-semibold">Migliore: </span>@if ($bestAo50){{number_format($bestAo50, 2)}} @else --:-- @endif</div>
-                        <div class="col-2"><span class="fw-semibold">Attuale: </span>@if ($ao100){{number_format($ao100, 2)}} @else --:-- @endif <span class="fw-semibold">Migliore: </span>@if ($bestAo100){{number_format($bestAo100, 2)}} @else --:-- @endif</div>
+                        <div class="col-2"><span class="fw-semibold">Attuale: </span>@if ($single && $single != 'DNF'){{number_format($single, 2)}} @elseif ($single == 'DNF') DNF @else --:-- @endif <span class="fw-semibold">Migliore: </span>@if ($bestSingle){{number_format($bestSingle, 2)}} @else --:-- @endif</div>
+                        <div class="col-2"><span class="fw-semibold">Attuale: </span>@if ($mo3 && $mo3 != 'DNF'){{number_format($mo3, 2)}} @elseif ($mo3 == 'DNF') DNF @else --:-- @endif <span class="fw-semibold">Migliore: </span>@if ($bestMo3){{number_format($bestMo3, 2)}} @else --:-- @endif</div>
+                        <div class="col-2"><span class="fw-semibold">Attuale: </span>@if ($ao5 && $ao5 != 'DNF'){{number_format($ao5, 2)}} @elseif ($ao5 == 'DNF') DNF @else --:-- @endif <span class="fw-semibold">Migliore: </span>@if ($bestAo5){{number_format($bestAo5, 2)}} @else --:-- @endif</div>
+                        <div class="col-2"><span class="fw-semibold">Attuale: </span>@if ($ao12 && $ao12 != 'DNF'){{number_format($ao12, 2)}} @elseif ($ao12 == 'DNF') DNF @else --:-- @endif <span class="fw-semibold">Migliore: </span>@if ($bestAo12){{number_format($bestAo12, 2)}} @else --:-- @endif</div>
+                        <div class="col-2"><span class="fw-semibold">Attuale: </span>@if ($ao50 && $ao50 != 'DNF'){{number_format($ao50, 2)}} @elseif ($ao50 == 'DNF') DNF @else --:-- @endif <span class="fw-semibold">Migliore: </span>@if ($bestAo50){{number_format($bestAo50, 2)}} @else --:-- @endif</div>
+                        <div class="col-2"><span class="fw-semibold">Attuale: </span>@if ($ao100 && $ao100 != 'DNF'){{number_format($ao100, 2)}} @elseif ($ao100 == 'DNF') DNF @else --:-- @endif <span class="fw-semibold">Migliore: </span>@if ($bestAo100){{number_format($bestAo100, 2)}} @else --:-- @endif</div>
                     </div>
                     <div class="row pt-3">
                         <div class="col-12">
+                            @guest
                             <span class="fw-semibold">Numero solve: @if ($tempTimes){{count($tempTimes)}} @else 0 @endif</span>
+                            @else
+                            <span class="fw-semibold">Numero solve: @if ($userTimes){{count($userTimes)}} @else 0 @endif</span>
+                            @endguest
                             <span class="fw-semibold">Media sessione: @if ($mean){{number_format($mean, 2)}} @else --:-- @endif</span></span>
                         </div>
                     </div>
@@ -134,15 +138,35 @@
                     <div class="col-5">Scramble</div>
                     <div class="col-2">Azioni</div>
                 </div>
-                @foreach ($tempTimes as $time)
-                <div class="row pt-2 text-center align-items-center">
-                    <div class="col-1">{{$loop->iteration}}.</div>
-                    <div class="col-2">{{$time[0]}} @if ($time[3])(P) @endif</div>
-                    <div class="col-2">{{$time[1]}}</div>
-                    <div class="col-5">{{$time[2]}}</div>
-                    <div class="col-2"><button wire:click="deleteTime({{$loop->index}})" class="button-main"><i class="fa-solid fa-trash"></i></button></div>
-                </div>
-                @endforeach
+                @guest
+                    @foreach ($tempTimes as $time)
+                    <div class="row pt-2 text-center align-items-center">
+                        <div class="col-1">{{$loop->iteration}}.</div>
+                        <div class="col-2">@if ($time[3]) {{number_format(($time[0]+2), 2)}} (P) @elseif ($time[4]) DNF @else {{$time[0]}} @endif</div>
+                        <div class="col-2">{{$time[1]}}</div>
+                        <div class="col-5">{{$time[2]}}</div>
+                        <div class="col-2">
+                            <button wire:click="deleteTime({{$loop->index}})" class="button-main"><i class="fa-solid fa-trash"></i></button>
+                            <button wire:click="setDNF({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-title="Assegna DNF" data-bs-placement="top">DNF</button>
+                            <button wire:click="addPenalty({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-title="Aggiungi +2" data-bs-placement="top">+2</button>
+                        </div>
+                    </div>
+                    @endforeach
+                @else
+                    @foreach ($userTimes as $time)
+                    <div class="row pt-2 text-center align-items-center">
+                        <div class="col-1">{{$loop->iteration}}.</div>
+                        <div class="col-2">@if ($time->hasPenalty) {{number_format(($time->time+2), 2)}} (P) @elseif ($time->hasDNF) DNF @else {{$time->time}} @endif</div>
+                        <div class="col-2">{{$time->date}}</div>
+                        <div class="col-5">{{$time->scramble}}</div>
+                        <div class="col-2">
+                            <button wire:click="deleteTime({{$loop->index}})" class="button-main"><i class="fa-solid fa-trash"></i></button>
+                            <button wire:click="setDNF({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-title="Assegna DNF" data-bs-placement="top">DNF</button>
+                            <button wire:click="addPenalty({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-title="Aggiungi +2" data-bs-placement="top">+2</button>
+                        </div>
+                    </div>
+                    @endforeach
+                @endguest
             </div>
         </div>
     </div>
@@ -156,11 +180,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Sei sicuro di voler aggiungere una penalità (+2)? L'operazione non può essere annullata</p>
+                    <p>Sei sicuro di voler aggiungere una penalità (+2)?</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="button-main" data-bs-dismiss="modal">Annulla</button>
-                    <button type="button" class="button-highlight" wire:click="addPenalty" data-bs-dismiss="modal">Aggiungi +2</button>
+                    @guest
+                    <button type="button" class="button-highlight" wire:click="addPenalty({{array_key_last($tempTimes)}})" data-bs-dismiss="modal">Aggiungi +2</button>
+                    @else
+                    <button type="button" class="button-highlight" wire:click="addPenalty({{$userTimes->keys()->last()}})" data-bs-dismiss="modal">Aggiungi +2</button>
+                    @endguest
                 </div>
             </div>
         </div>
@@ -173,11 +201,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Sei sicuro di voler assegnare DNF? L'operazione non può essere annullata</p>
+                    <p>Sei sicuro di voler assegnare DNF?</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="button-main" data-bs-dismiss="modal">Annulla</button>
-                    <button type="button" class="button-highlight" wire:click="setDNF" data-bs-dismiss="modal">Assegna DNF</button>
+                    @guest
+                    <button type="button" class="button-highlight" wire:click="setDNF({{array_key_last($tempTimes)}})" data-bs-dismiss="modal">Assegna DNF</button>
+                    @else
+                    <button type="button" class="button-highlight" wire:click="setDNF({{$userTimes->keys()->last()}})" data-bs-dismiss="modal">Assegna DNF</button>
+                    @endguest
                 </div>
             </div>
         </div>

@@ -51,7 +51,7 @@
                     </div>
                     <button type="submit" class="button-highlight w-100">Crea account</button>
                 </form>
-                <p class="m-0 small">Hai già un account? <a href="{{route('register')}}" class="redirect fw-semibold">Accedi ora</a></p>
+                <p class="m-0 small">Hai già un account? <a href="{{route('login')}}" class="redirect fw-semibold">Accedi ora</a></p>
                 <a href="{{route('timer')}}" class="w-25 d-flex justify-content-center text-decoration-none"><button class="button-main mt-3 w-75">Ritorna al timer</button></a>
             </div>
         </div>
