@@ -151,11 +151,21 @@ function initializeBootstrap(){
     const dnfBtn = document.getElementById('dnfBtn')
     const settingsModal = document.getElementById('settingsModal')
     const settingsBtn = document.getElementById('settingsBtn')
+    const exportModal = document.getElementById('exportModal')
+    const exportBtn = document.getElementById('exportBtn')
+    const deleteSessionModal = document.getElementById('deleteSessionModal')
+    const deleteSessionBtn = document.getElementById('deleteSessionBtn')
     penaltyModal.addEventListener('shown.bs.modal', () => {
         penaltyBtn.focus()
     })
     dnfModal.addEventListener('shown.bs.modal', () => {
         dnfBtn.focus()
+    })
+    exportModal.addEventListener('shown.bs.modal', () => {
+        exportBtn.focus()
+    })
+    deleteSessionModal.addEventListener('shown.bs.modal', () => {
+        deleteSessionBtn.focus()
     })
     if (settingsBtn){
         settingsModal.addEventListener('shown.bs.modal', () => {
@@ -241,6 +251,14 @@ function loadSettings(){
     if(timerSizeInput){
         timerSizeInput.value = localStorage.getItem('timer-size');   
     }
+    if (!localStorage.getItem('scramble-size')){
+        localStorage.setItem('scramble-size', '20');
+    }else{
+        document.documentElement.style.setProperty('--scramble-size', localStorage.getItem('scramble-size') + 'px');
+    }
+    if(scrambleSizeInput){
+        scrambleSizeInput.value = localStorage.getItem('scramble-size');   
+    }
     if (mode == "dark"){
         if (modeSwitch){
             modeSwitch.checked = true;
@@ -282,5 +300,46 @@ if(timerSizeInc){
             localStorage.setItem('timer-size', timerSizeInput.value);
             document.documentElement.style.setProperty('--timer-size', timerSizeInput.value + 'px');
         }
+    })
+}
+
+let scrambleSizeInput = document.querySelector('#scrambleSize');
+if(scrambleSizeInput){
+    scrambleSizeInput.addEventListener('change', () => {
+        localStorage.setItem('scramble-size', scrambleSizeInput.value);
+        document.documentElement.style.setProperty('--scramble-size', scrambleSizeInput.value + 'px');
+    })
+}
+
+let scrambleSizeInc = document.querySelector('#scrambleSizeInc');
+let scrambleSizeDec = document.querySelector('#scrambleSizeDec');
+if(scrambleSizeInc){
+    scrambleSizeInc.addEventListener('click', () => {
+        if(Number(scrambleSizeInput.value) >= Number(scrambleSizeInput.max)){
+            return;
+        }else{
+            scrambleSizeInput.value = Number(scrambleSizeInput.value) + Number(scrambleSizeInput.step);
+            localStorage.setItem('scramble-size', scrambleSizeInput.value);
+            document.documentElement.style.setProperty('--scramble-size', scrambleSizeInput.value + 'px');
+        }
+    })
+    scrambleSizeDec.addEventListener('click', () => {
+        if(Number(scrambleSizeInput.value) <= Number(scrambleSizeInput.min)){
+            return;
+        }else{
+            scrambleSizeInput.value = Number(scrambleSizeInput.value) - Number(scrambleSizeInput.step);
+            localStorage.setItem('scramble-size', scrambleSizeInput.value);
+            document.documentElement.style.setProperty('--scramble-size', scrambleSizeInput.value + 'px');
+        }
+    })
+}
+
+let statisticsBox = document.querySelector('.statistics-box');
+let statisticsText = document.querySelector('#statisticsText');
+let statisticsBtn = document.querySelector('#statisticsBtn');
+if(statisticsBox){
+    statisticsBtn.addEventListener('click', () => {
+        statisticsBox.classList.toggle('box-height');
+        statisticsText.classList.toggle('m-0');
     })
 }

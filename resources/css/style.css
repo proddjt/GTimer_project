@@ -8,6 +8,7 @@
     --bg-sec: #dee2e6;
     --text-sec: #909294;
     --timer-size: 175px;
+    --scramble-size: 20px;
 }
 
 *{
@@ -188,10 +189,27 @@ button , .a-button{
     color: var(--text);
 }
 
-.puzzle-box{
+.puzzle-box, .statistics-box, .times-box{
     border: 3px solid var(--text);
     border-radius: 5px;
     box-shadow: 0px 0px 10px var(--text);
+}
+
+.box-height{
+    height: 40vh;
+}
+
+.statistic-title{
+    font-size: 1.2rem;
+}
+
+.statistic-content{
+    font-size: 1.1rem;
+}
+
+.single-statistic{
+    border: 2px solid var(--text);
+    box-shadow: 0px 0px 3px var(--text);
 }
 
 .collapse{
@@ -227,6 +245,18 @@ input{
     background-color: var(--bg-sec);
     color: var(--text);
     border: 1px solid var(--text);
+}
+
+.scramble{
+    font-size: var(--scramble-size);
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+#deleteSessionBtn, #exportBtn{
+    font-size: 1rem;
 }
 
 /* LOADER */

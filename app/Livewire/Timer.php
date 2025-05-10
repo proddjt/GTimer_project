@@ -5,9 +5,11 @@ namespace App\Livewire;
 use App\Models\Temp;
 use App\Models\Profile;
 use Livewire\Component;
+use App\Exports\TimeExport;
 use Livewire\Attributes\On;
 use App\Jobs\GenerateScramble;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 
@@ -32,6 +34,7 @@ class Timer extends Component
     public $bestAo100 = null;
     public $mean = null;
     public $userTimes;
+    public $validTimes;
     public function render()
     {
         return view('livewire.timer');
@@ -44,30 +47,69 @@ class Timer extends Component
         $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
     }
 
+    public function exportSession($extension){
+        if (!Auth::check()) {
+            $array = $this->tempTimes;
+            if ($extension == 'csv') {
+                $filename = 'guest' . '-' . $this->puzzle . '-temp-times-' . date('d-m-Y') . '.csv';
+            }else{
+                
+                $filename = 'guest' . '-' . $this->puzzle . '-temp-times-' . date('d-m-Y') . '.xlsx';
+            }
+        }else{
+            $array = $this->userTimes->map(function ($item) {
+                return array_values($item->toArray());
+            })->toArray();
+            if ($extension == 'csv') {
+                $filename = Auth::user()->name . '-' . $this->puzzle . '-times-' . date('d-m-Y') . '.csv';
+            }else{
+                $filename = Auth::user()->name . '-' . $this->puzzle . '-times-' . date('d-m-Y') . '.xlsx';
+            }
+        }
+        $export = new TimeExport([$array]);
+        if ($extension == 'csv') {
+            return Excel::download($export, $filename, \Maatwebsite\Excel\Excel::CSV);
+        }else{
+            return Excel::download($export, $filename, \Maatwebsite\Excel\Excel::XLSX);
+        }
+        
+    }
+
+    public function deleteSession(){
+        if (!Auth::check()) {
+            $this->tempTimes = [];
+        }else{
+            Auth::user()->times()->where('puzzle', $this->puzzle)->delete();
+            $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
+        }
+        $this->calculateStatistics($this->tempTimes);
+        $this->dispatch('DOMRefresh');
+    }
+
     #[On('firstLoad')]
     public function generateFirstScramble()
     {
-        $process = new Process([
-            'tnoodle.bat',
-            'scramble',
-            '-p',
-            $this->puzzle
-        ]);
-        $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
-        $process->run();
-        $this->scramble = str_replace(["\r", "\n"], '', $process->getOutput());
-        $process = new Process([
-            'tnoodle.bat',
-            'draw',
-            '-p',
-            $this->puzzle,
-            '-s',
-            $this->scramble,
-            '-o',
-            '../../public/img/scrambles/scramble.svg'
-        ]);
-        $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
-        $process->run();
+        // $process = new Process([
+        //     'tnoodle.bat',
+        //     'scramble',
+        //     '-p',
+        //     $this->puzzle
+        // ]);
+        // $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
+        // $process->run();
+        // $this->scramble = str_replace(["\r", "\n"], '', $process->getOutput());
+        // $process = new Process([
+        //     'tnoodle.bat',
+        //     'draw',
+        //     '-p',
+        //     $this->puzzle,
+        //     '-s',
+        //     $this->scramble,
+        //     '-o',
+        //     '../../public/img/scrambles/scramble.svg'
+        // ]);
+        // $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
+        // $process->run();
         if(Auth::check()){
             $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
                 return array_values($item->toArray());
@@ -92,9 +134,9 @@ class Timer extends Component
         if (!Auth::check()) {
             $this->tempTimes = [];
         }
-        $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
         if(Auth::check()){
-            $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
+            $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
+            $userArray = $this->userTimes->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
             $this->calculateStatistics($userArray);
@@ -108,18 +150,15 @@ class Timer extends Component
     public function newScramble($time){
         if (!Auth::check()) {
             array_push($this->tempTimes, [$time, date('d-m-Y H:i:s'), $this->scramble, false, false]);
+            $this->calculateStatistics($this->tempTimes);
         }else{
             Auth::user()->times()->create(['time' => $time, 'date' => date('d-m-Y H:i:s'), 'scramble' => $this->scramble, 'hasPenalty' => false, 'hasDNF' => false, 'puzzle' => $this->puzzle]);
-        }
-        if(Auth::check()){
-            $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
+            $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
+            $userArray = $this->userTimes->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
             $this->calculateStatistics($userArray);
-        }else{
-            $this->calculateStatistics($this->tempTimes);
         }
-        $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
         $this->scramble = $this->scrambleTable->scramble;
         rename(base_path("public\img\scrambles\scramble-temp.svg"), base_path("public\img\scrambles\scramble.svg"));
         $this->newTempScramble($this->puzzle);
@@ -129,18 +168,15 @@ class Timer extends Component
     public function deleteTime($index){
         if (!Auth::check()) {
             unset($this->tempTimes[$index]);
+            $this->calculateStatistics($this->tempTimes);
         }else{
             $this->userTimes[$index]->delete();
-        }
-        if(Auth::check()){
-            $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
+            $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
+            $userArray = $this->userTimes->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
             $this->calculateStatistics($userArray);
-        }else{
-            $this->calculateStatistics($this->tempTimes);
         }
-        $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
         $this->dispatch('DOMRefresh');
     }
 
@@ -153,41 +189,51 @@ class Timer extends Component
     public function addPenalty($index){
         if (!Auth::check() && $this->tempTimes[$index][3] == false) {
             $this->tempTimes[$index][3] = true;
+            $this->calculateStatistics($this->tempTimes);
         }else{
             $this->userTimes[$index]->update(['hasPenalty' => true]);
             $this->userTimes[$index]->save();
-        }
-        if(Auth::check()){
-            $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
+            $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
+            $userArray = $this->userTimes->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
             $this->calculateStatistics($userArray);
-        }else{
-            $this->calculateStatistics($this->tempTimes);
         }
-        $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
         $this->dispatch('DOMRefresh');
-        $this->dispatch('resetTimer');
     }
 
     public function setDNF($index){
-        if (!Auth::check() && $this->tempTimes[$index][4] == false) {
+        if (!Auth::check()) {
             $this->tempTimes[$index][4] = true;
+            $this->calculateStatistics($this->tempTimes);
         }else{
             $this->userTimes[$index]->update(['hasDNF' => true]);
             $this->userTimes[$index]->save();
-        }
-        if(Auth::check()){
-            $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
+            $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
+            $userArray = $this->userTimes->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
             $this->calculateStatistics($userArray);
-        }else{
-            $this->calculateStatistics($this->tempTimes);
         }
-        $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
         $this->dispatch('DOMRefresh');
-        $this->dispatch('resetTimer');
+    }
+
+    public function setOK($index){
+        if (!Auth::check()){
+            $this->tempTimes[$index][4] = false;
+            $this->tempTimes[$index][3] = false;
+            $this->calculateStatistics($this->tempTimes);
+        }else{
+            $this->userTimes[$index]->update(['hasDNF' => false]);
+            $this->userTimes[$index]->update(['hasPenalty' => false]);
+            $this->userTimes[$index]->save();
+            $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
+            $userArray = $this->userTimes->map(function ($item) {
+                return array_values($item->toArray());
+            })->toArray();
+            $this->calculateStatistics($userArray);
+        }
+        $this->dispatch('DOMRefresh');
     }
 
     public function calculateStatistics($array){
@@ -483,6 +529,13 @@ class Timer extends Component
                     }
                 }
             }
+            $dnfTotalCount = 0;
+            foreach($array as $time) {
+                if ($time[4] == true){
+                    $dnfTotalCount++;
+                }
+            }
+            $this->validTimes = count($array) - $dnfTotalCount;
             $count = 0;
             $sum = 0;
             foreach ($array as $time) {
@@ -505,6 +558,6 @@ class Timer extends Component
             $this->single = null;
             $this->bestSingle = null;
             $this->mean = null;
-        } 
+        }
     }
 }
