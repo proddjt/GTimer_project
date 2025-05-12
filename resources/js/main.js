@@ -14,7 +14,7 @@ let resetBtn = document.querySelector('#reset');
 let penaltyBtn = document.querySelector('#penaltyBtn');
 let dnfBtn = document.querySelector('#dnfBtn');
 let collapseItems = document.querySelectorAll('.collapse-item');
-let actualTime = 0.00;
+let actualTime = "00.00";
 let setLed = document.querySelector('#set');
 let goLed = document.querySelector('#go');
 let leftHand = document.querySelector('#leftHand');
@@ -32,13 +32,7 @@ if(timerPage){
     Livewire.on('DOMRefresh', () => {
         setTimeout(() => {
             let timer = document.querySelector('#timer');
-            if (actualTime >= 3600) {
-                timer.innerText = dayjs.duration(actualTime, 'seconds').format('hh:mm:ss.SSS').slice(0, -1);
-            }else if(actualTime >= 60){
-                timer.innerText = dayjs.duration(actualTime, 'seconds').format('mm:ss.SSS').slice(0, -1);
-            }else{
-                timer.innerText = dayjs.duration(actualTime, 'seconds').format('ss.SSS').slice(0, -1);
-            }
+            timer.innerText = actualTime;
             initializeBootstrap();
             loadSettings();
         }, 10);
@@ -51,13 +45,7 @@ if(timerPage){
         loader.classList.add('d-none');
         setTimeout(() => {
             let timer = document.querySelector('#timer');
-            if (actualTime >= 3600) {
-                timer.innerText = dayjs.duration(actualTime, 'seconds').format('hh:mm:ss.SSS').slice(0, -1);
-            }else if(actualTime >= 60){
-                timer.innerText = dayjs.duration(actualTime, 'seconds').format('mm:ss.SSS').slice(0, -1);
-            }else{
-                timer.innerText = dayjs.duration(actualTime, 'seconds').format('ss.SSS').slice(0, -1);
-            }
+            timer.innerText = actualTime;
             initializeBootstrap();
             loadSettings();
         }, 10);
@@ -100,14 +88,16 @@ if(timerPage){
             clearInterval(timerFunction);
             if (Number(timer.innerText) >= 3600) {
                 actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('hh:mm:ss.SSS').slice(0, -1);
-            }else{
+            }else if (Number(timer.innerText) >= 60) {
                 actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('mm:ss.SSS').slice(0, -1);
+            }else{
+                actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('ss.SSS').slice(0, -1);
             }
             setLed.classList.remove('set-led-blink');
             goLed.classList.remove('go-led-blink');
             setLed.classList.add('inactive-led');
             goLed.classList.add('inactive-led');
-            Livewire.dispatch('timerStopped', {time: actualTime});
+            Livewire.dispatch('timerStopped', {time: timeToFloatSeconds(actualTime)});
             timerFunction = null;
             timerStart = false;
             resetBtn.classList.add('d-inline-block');
@@ -151,17 +141,53 @@ if(timerPage){
                 dnfBtn.classList.add('d-none');
                 let startTime = 0.00;
                 timerFunction = setInterval(() => {
-                    startTime += 0.01;
-                    timer.innerText = startTime.toFixed(2);
+                    startTime += 10;
+                    if (startTime < 60000){
+                        timer.innerText = dayjs.duration(startTime, 'milliseconds').format('ss.SSS').slice(0, -1);
+                    }else if(startTime < 3600000){
+                        timer.innerText = dayjs.duration(startTime, 'milliseconds').format('mm:ss.SSS').slice(0, -1);
+                    }else{
+                        timer.innerText = dayjs.duration(startTime, 'milliseconds').format('hh:mm:ss.SSS').slice(0, -1);
+                    }
                 }, 10)
             }
         }
     })
 
     resetBtn.addEventListener('click', () => {
-        actualTime = 0.00
-        timer.innerText = dayjs.duration(actualTime, 'seconds').format('ss.SSS').slice(0, -1);
+        actualTime = 0
+        timer.innerText = dayjs.duration(actualTime, 'milliseconds').format('ss.SSS').slice(0, -1);
     })
+}
+
+function timeToFloatSeconds(time) {
+    time = time.replace(',', '.');
+    const parts = time.split(':');
+
+    let hours = 0;
+    let minutes = 0;
+    let seconds = 0;
+    let centiseconds = 0;
+
+    function explodeCenti(part) {
+        const subParts = part.split('.');
+        const secs = parseInt(subParts[0], 10) || 0;
+        const centis = parseInt(subParts[1], 10) || 0;
+        return [secs, centis];
+    }
+
+    if (parts.length === 3) {
+        hours = parseInt(parts[0], 10);
+        minutes = parseInt(parts[1], 10);
+        [seconds, centiseconds] = explodeCenti(parts[2]);
+    } else if (parts.length === 2) {
+        minutes = parseInt(parts[0], 10);
+        [seconds, centiseconds] = explodeCenti(parts[1]);
+    } else if (parts.length === 1) {
+        [seconds, centiseconds] = explodeCenti(parts[0]);
+    }
+
+    return (hours * 3600) + (minutes * 60) + seconds + (centiseconds / 100);
 }
 
 function initializeBootstrap(){

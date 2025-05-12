@@ -35,6 +35,8 @@ class Timer extends Component
     public $mean = null;
     public $userTimes;
     public $validTimes;
+    public $timestamp;
+    
     public function render()
     {
         return view('livewire.timer');
@@ -45,6 +47,7 @@ class Timer extends Component
         $this->puzzle = $this->profile->selectedPuzzle;
         $this->scrambleTable = Temp::where('id', 1)->first();
         $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
+        $this->timestamp = now()->timestamp;
     }
 
     public function exportSession($extension){
@@ -97,7 +100,6 @@ class Timer extends Component
         ]);
         $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
         $process->run();
-        // $this->scramble = str_replace(["\r", "\n"], '', $process->getOutput());
         $this->scramble = $process->getOutput();
         $process = new Process([
             'tnoodle.bat',
@@ -112,16 +114,18 @@ class Timer extends Component
         $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
         $process->run();
         if(Auth::check()){
-            $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
-                return array_values($item->toArray());
-            })->toArray();
+            $userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
             $arrayForStats = $this->userTimes->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
         }else{
             $arrayForStats = $this->tempTimes;
         }
+        foreach ($arrayForStats as $time) {
+            $time[0] = $this->timeToFloatSeconds($time[0]);
+        }
         $this->calculateStatistics($arrayForStats);
+        $this->timestamp = now()->timestamp;
         $this->dispatch('scrambleGenerated');
         $this->newTempScramble($this->puzzle);
     }
@@ -140,13 +144,16 @@ class Timer extends Component
         }
         if(Auth::check()){
             $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
-            $userArray = $this->userTimes->map(function ($item) {
+            $arrayForStats = $this->userTimes->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
-            $this->calculateStatistics($userArray);
         }else{
-            $this->calculateStatistics($this->tempTimes);
+            $arrayForStats = $this->tempTimes;
         }
+        foreach ($arrayForStats as $time) {
+            $time[0] = $this->timeToFloatSeconds($time[0]);
+        }
+        $this->calculateStatistics($arrayForStats);
         $this->dispatch('DOMRefresh');
     }
 
@@ -168,6 +175,7 @@ class Timer extends Component
         $this->calculateStatistics($arrayForStats);
         $this->scramble = $this->scrambleTable->scramble;
         rename(base_path("public\img\scrambles\scramble-temp.svg"), base_path("public\img\scrambles\scramble.svg"));
+        $this->timestamp = now()->timestamp;
         $this->newTempScramble($this->puzzle);
         $this->dispatch('DOMRefresh');
     }
@@ -197,11 +205,13 @@ class Timer extends Component
     }
 
     public function addPenalty($index){
-        if (!Auth::check() && $this->tempTimes[$index][3] == false) {
+        if (!Auth::check()) {
+            $this->tempTimes[$index][4] = false;
             $this->tempTimes[$index][3] = true;
             $arrayForStats = $this->tempTimes;
         }else{
             $this->userTimes[$index]->update(['hasPenalty' => true]);
+            $this->userTimes[$index]->update(['hasDNF' => false]);
             $this->userTimes[$index]->save();
             $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
             $arrayForStats = $this->userTimes->map(function ($item) {
@@ -214,10 +224,12 @@ class Timer extends Component
 
     public function setDNF($index){
         if (!Auth::check()) {
+            $this->tempTimes[$index][3] = false;
             $this->tempTimes[$index][4] = true;
             $arrayForStats = $this->tempTimes;
         }else{
             $this->userTimes[$index]->update(['hasDNF' => true]);
+            $this->userTimes[$index]->update(['hasPenalty' => false]);
             $this->userTimes[$index]->save();
             $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
             $arrayForStats = $this->userTimes->map(function ($item) {
@@ -269,13 +281,28 @@ class Timer extends Component
     }
 
     public function explodeCenti($part) {
-    if (strpos($part, '.') !== false) {
-        list($s, $c) = explode('.', $part);
-        return [(int) $s, (int) substr($c . '00', 0, 2)]; // assicura due cifre
-    } else {
-        return [(int) $part, 0];
+        if (strpos($part, '.') !== false) {
+            list($s, $c) = explode('.', $part);
+            return [(int) $s, (int) substr($c . '00', 0, 2)]; // assicura due cifre
+        } else {
+            return [(int) $part, 0];
+        }
     }
-}
+
+    public function formatTime(float $seconds){
+        $centiseconds = round(($seconds - floor($seconds)) * 100);
+        $totalSeconds = floor($seconds);
+        $hours = floor($totalSeconds / 3600);
+        $minutes = floor(($totalSeconds % 3600) / 60);
+        $secs = $totalSeconds % 60;
+        if ($seconds < 60) {
+            return sprintf("%02d.%02d", $secs, $centiseconds);
+        } elseif ($seconds < 3600) {
+            return sprintf("%02d:%02d.%02d", $minutes, $secs, $centiseconds);
+        } else {
+            return sprintf("%02d:%02d:%02d.%02d", $hours, $minutes, $secs, $centiseconds);
+        }
+    }
 
 
     public function calculateStatistics($array){
@@ -301,7 +328,7 @@ class Timer extends Component
                 $min = array_slice(sort($last100), 0, 5);
                 $minMax = array_merge($min, $max);
                 $filtered = array_diff($last100, $minMax);
-                $this->Ao100 = timeToSeconds((array_sum($filtered) / count($filtered)));
+                $this->Ao100 = $this->formatTime(floor((array_sum($filtered) / count($filtered)) * 100) / 100);
             }else{
                 $this->Ao100 = "DNF";
             }
@@ -327,9 +354,9 @@ class Timer extends Component
                     $currentMin = array_slice(sort($current100), 0, 5);
                     $currentMinMax = array_merge($currentMin, $currentMax);
                     $currentFiltered = array_diff($current100, $currentMinMax);
-                    $currentAo100 = timeToSeconds((array_sum($currentFiltered) / count($currentFiltered)));
-                    if ($currentAo100 < $this->bestAo100 || !$this->bestAo100) {
-                        $this->bestAo100 = $currentAo100;
+                    $currentAo100 = floor((array_sum($currentFiltered) / count($currentFiltered)) * 100) / 100;
+                    if ($currentAo100 < $this->timeToFloatSeconds($this->bestAo100) || !$this->bestAo100) {
+                        $this->bestAo100 = $this->formatTime($currentAo100);
                     }
                 }
             }
@@ -360,7 +387,7 @@ class Timer extends Component
                 $min = array_slice(sort($last50), 0, 3);
                 $minMax = array_merge($min, $max);
                 $filtered = array_diff($last50, $minMax);
-                $this->Ao50 = timeToSeconds((array_sum($filtered) / count($filtered)));
+                $this->Ao50 = $this->formatTime(floor((array_sum($filtered) / count($filtered)) * 100) / 100);
             }else{
                 $this->Ao50 = 'DNF';
             }
@@ -387,8 +414,8 @@ class Timer extends Component
                     $currentMinMax = array_merge($currentMin, $currentMax);
                     $currentFiltered = array_diff($current50, $currentMinMax);
                     $currentAo50 = floor((array_sum($currentFiltered) / count($currentFiltered)) * 100) / 100;
-                    if($currentAo50 < $this->bestAo50 || !$this->bestAo50){
-                        $this->bestAo50 = $currentAo50;
+                    if($currentAo50 < $this->timeToFloatSeconds($this->bestAo50) || !$this->bestAo50){
+                        $this->bestAo50 = $this->formatTime($currentAo50);
                     }
                 }
             }
@@ -416,7 +443,7 @@ class Timer extends Component
             if ($dnfCount <= 1) {
                 $min = min($last12);
                 $filtered = array_diff($last12, [$min, $max]);
-                $this->Ao12 = floor((array_sum($filtered) / count($filtered)) * 100) / 100;
+                $this->Ao12 = $this->formatTime(floor((array_sum($filtered) / count($filtered)) * 100) / 100);
             }else{
                 $this->Ao12 = 'DNF';
             }
@@ -440,8 +467,8 @@ class Timer extends Component
                     $currentMin = min($current12);
                     $currentFiltered = array_diff($current12, [$currentMin, $currentMax]);
                     $currentAo12 = floor((array_sum($currentFiltered) / count($currentFiltered)) * 100) / 100;
-                    if ($currentAo12 < $this->bestAo12 || !$this->bestAo12) {
-                        $this->bestAo12 = $currentAo12;
+                    if ($currentAo12 < $this->timeToFloatSeconds($this->bestAo12) || !$this->bestAo12) {
+                        $this->bestAo12 = $this->formatTime($currentAo12);
                     }
                 }
             }
@@ -469,7 +496,7 @@ class Timer extends Component
             if ($dnfCount <= 1){
                 $min = min($last5);
                 $filtered = array_diff($last5, [$min, $max]);
-                $this->Ao5 = floor((array_sum($filtered) / count($filtered) * 100)) / 100;
+                $this->Ao5 = $this->formatTime(floor((array_sum($filtered) / count($filtered)) * 100) / 100);;
             }else{
                 $this->Ao5 = 'DNF';
             }
@@ -493,8 +520,8 @@ class Timer extends Component
                     $currentMin = min($current5);
                     $currentFiltered = array_diff($current5, [$currentMin, $currentMax]);
                     $currentAo5 = floor((array_sum($currentFiltered) / count($currentFiltered)) * 100) / 100;
-                    if ($currentAo5 < $this->bestAo5 || !$this->bestAo5) {
-                        $this->bestAo5 = $currentAo5;
+                    if ($currentAo5 < $this->timeToFloatSeconds($this->bestAo5) || !$this->bestAo5) {
+                        $this->bestAo5 = $this->formatTime($currentAo5);
                     }
                 }
             }
@@ -519,7 +546,7 @@ class Timer extends Component
                 }
             }
             if ($this->mo3 != 'DNF') {
-                $this->mo3 = floor(($sum / count($last3)) * 100) / 100;
+                $this->mo3 = $this->formatTime(floor(($sum / count($last3)) * 100) / 100);
             }
             $this->bestMo3 = null;
             for ($i = 0; $i <= count($array) - 3; $i++) {
@@ -538,8 +565,8 @@ class Timer extends Component
                 }
                 if ($currentmo3 != 'DNF') {
                     $currentmo3 = floor(($sum / count($current3)) * 100) / 100;
-                    if($currentmo3 < $this->bestMo3 || !$this->bestMo3){
-                        $this->bestMo3 = $currentmo3;
+                    if($currentmo3 < $this->timeToFloatSeconds($this->bestMo3) || !$this->bestMo3){
+                        $this->bestMo3 = $this->formatTime($currentmo3);
                     }
                 }
             }
@@ -553,20 +580,20 @@ class Timer extends Component
             if ($array[array_key_last($array)][4] == true) {
                 $this->single = 'DNF';
             }else if ($array[array_key_last($array)][3] == true) {
-                $this->single = $array[array_key_last($array)][0] + 2;
+                $this->single = $this->formatTime($array[array_key_last($array)][0] + 2);
             }else{
-                $this->single = $array[array_key_last($array)][0];
+                $this->single = $this->formatTime($array[array_key_last($array)][0]);
             }
             $this->bestSingle = null;
             for ($i = 0; $i < count($array); $i++) {
                 if ($array[$i][4] == false){
                     if ($array[$i][3] == false) {
-                        if ($array[$i][0] < $this->bestSingle || !$this->bestSingle) {
-                            $this->bestSingle = $array[$i][0];
+                        if ($array[$i][0] < $this->timeToFloatSeconds($this->bestSingle) || !$this->bestSingle) {
+                            $this->bestSingle = $this->formatTime($array[$i][0]);
                         }
                     }else{
-                        if ($array[$i][0] + 2 < $this->bestSingle || !$this->bestSingle) {
-                            $this->bestSingle = $array[$i][0] + 2;
+                        if ($array[$i][0] + 2 < $this->timeToFloatSeconds($this->bestSingle) || !$this->bestSingle) {
+                            $this->bestSingle = $this->formatTime($array[$i][0] + 2);
                         }
                     }
                 }
@@ -594,7 +621,7 @@ class Timer extends Component
             if ($count == 0) {
                 $this->mean = null;
             }else{
-                $this->mean = floor(($sum / $count) * 100) / 100;
+                $this->mean = $this->formatTime(floor(($sum / $count) * 100) / 100);
             }
         }else{
             $this->single = null;

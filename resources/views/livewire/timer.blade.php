@@ -50,7 +50,7 @@
                 </div>
                 <div class="row pt-3">
                     <div class="col-2 d-flex justify-content-center align-items-center">
-                        <img src="/img/scrambles/scramble.svg?timestamp={{ now()->timestamp }}" alt="Immagine scramble" class="w-100">
+                        <img src="/img/scrambles/scramble.svg?timestamp={{ $timestamp }}" alt="Immagine scramble" class="w-100">
                     </div>
                     <div class="col-10 d-flex justify-content-center align-items-center">
                         @if ($puzzle == 'mega')
@@ -118,7 +118,7 @@
                 @foreach ($tempTimes as $time)
                 <div class="row pt-1 text-center align-items-center">
                     <div class="col-1 fw-semibold fst-italic fs-5">{{$loop->iteration}}.</div>
-                    <div class="col-2 fw-semibold fst-italic fs-5">@if ($time[3]) @if ($time[0] >= 3600) {{gmdate('h:i:s', ($time[0]+2))}} @else {{gmdate('i:s', ($time[0]+2))}} @endif (P) @elseif ($time[4]) DNF @else @if ($time[0] >= 3600) {{gmdate('h:i:s', $time[0])}} @else {{gmdate('i:s', $time[0])}} @endif @endif</div>
+                    <div class="col-2 fw-semibold fst-italic fs-5">@if ($time[3]) @if ($time[0] >= 3600) {{$this->formatTime(($time[0]+2))}} @else {{$this->formatTime(($time[0]+2))}} @endif (P) @elseif ($time[4]) DNF @else @if ($time[0] >= 3600) {{$this->formatTime($time[0])}} @else {{$this->formatTime($time[0])}} @endif @endif</div>
                     <div class="col-2 fw-semibold fst-italic fs-5">{{$time[1]}}</div>
                     <div class="col-5 fw-semibold fst-italic fs-5">{{$time[2]}}</div>
                     <div class="col-2">
@@ -133,7 +133,7 @@
                 @foreach ($userTimes as $time)
                 <div class="row pt-2 text-center align-items-center">
                     <div class="col-1 fw-semibold fst-italic fs-5">{{$loop->iteration}}.</div>
-                    <div class="col-2 fw-semibold fst-italic fs-5">@if ($time->hasPenalty) @if ($time->time >= 3600) {{gmdate('h:i:s', ($time->time+2))}} @else {{gmdate('i:s', ($time->time+2))}} @endif (P) @elseif ($time->hasDNF) DNF @else @if ($time->time >= 3600) {{gmdate('h:i:s', $time->time)}} @else {{gmdate('i:s', $time->time)}} @endif @endif</div>
+                    <div class="col-2 fw-semibold fst-italic fs-5">@if ($time->hasPenalty) @if ($time->time >= 3600) {{$this->formatTime(($time->time+2))}} @else {{$this->formatTime(($time->time+2))}} @endif (P) @elseif ($time->hasDNF) DNF @else @if ($time->time >= 3600) {{$this->formatTime($time->time)}} @else {{$this->formatTime($time->time)}} @endif @endif</div>
                     <div class="col-2 fw-semibold fst-italic fs-5">{{$time->date}}</div>
                     <div class="col-5 fw-semibold fst-italic small">{{$time->scramble}}</div>
                     <div class="col-2 small">
@@ -165,7 +165,7 @@
                                     @else
                                     <div class="col-6 statistic-content">@if (!$userTimes->isEmpty()){{$validTimes}}/{{count($userTimes)}} @else 0 @endif</div>
                                     @endguest
-                                    <div class="col-6 statistic-content">@if ($bestSingle){{number_format($bestSingle, 2)}} @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($mean){{$mean}} @else --:-- @endif</div>
                                 </div>
                             </div>
                             <div class="single-statistic my-2 p-1">
@@ -177,8 +177,8 @@
                                 <div class="row text-center">
                                     <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
                                     <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
-                                    <div class="col-6 statistic-content">@if ($single && $single != 'DNF'){{number_format($single, 2)}} @elseif ($single == 'DNF') DNF @else --:-- @endif</div>
-                                    <div class="col-6 statistic-content">@if ($bestSingle){{number_format($bestSingle, 2)}} @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($single && $single != 'DNF'){{$single}} @elseif ($single == 'DNF') DNF @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($bestSingle){{$bestSingle}} @else --:-- @endif</div>
                                 </div>
                             </div>
                             <div class="single-statistic my-2 p-1">
@@ -190,8 +190,8 @@
                                 <div class="row text-center">
                                     <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
                                     <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
-                                    <div class="col-6 statistic-content">@if ($mo3 && $mo3 != 'DNF'){{number_format($mo3, 2)}} @elseif ($mo3 == 'DNF') DNF @else --:-- @endif</div>
-                                    <div class="col-6 statistic-content">@if ($bestMo3){{number_format($bestMo3, 2)}} @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($mo3 && $mo3 != 'DNF'){{$mo3}} @elseif ($mo3 == 'DNF') DNF @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($bestMo3){{$bestMo3}} @else --:-- @endif</div>
                                 </div>
                             </div>
                             <div class="single-statistic my-2 p-1">
@@ -203,8 +203,8 @@
                                 <div class="row text-center">
                                     <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
                                     <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
-                                    <div class="col-6 statistic-content">@if ($ao5 && $ao5 != 'DNF'){{number_format($ao5, 2)}} @elseif ($ao5 == 'DNF') DNF @else --:-- @endif</div>
-                                    <div class="col-6 statistic-content">@if ($bestAo5){{number_format($bestAo5, 2)}} @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($ao5 && $ao5 != 'DNF'){{$ao5}} @elseif ($ao5 == 'DNF') DNF @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($bestAo5){{$bestAo5}} @else --:-- @endif</div>
                                 </div>
                             </div>
                             <div class="single-statistic my-2 p-1">
@@ -216,8 +216,8 @@
                                 <div class="row text-center">
                                     <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
                                     <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
-                                    <div class="col-6 statistic-content">@if ($ao12 && $ao12 != 'DNF'){{number_format($ao12, 2)}} @elseif ($ao12 == 'DNF') DNF @else --:-- @endif</div>
-                                    <div class="col-6 statistic-content">@if ($bestAo12){{number_format($bestAo12, 2)}} @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($ao12 && $ao12 != 'DNF'){{$ao12}} @elseif ($ao12 == 'DNF') DNF @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($bestAo12){{$bestAo12}} @else --:-- @endif</div>
                                 </div>
                             </div>
                             <div class="single-statistic my-2 p-1">
@@ -229,8 +229,8 @@
                                 <div class="row text-center">
                                     <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
                                     <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
-                                    <div class="col-6 statistic-content">@if ($ao50 && $ao50 != 'DNF'){{number_format($ao50, 2)}} @elseif ($ao50 == 'DNF') DNF @else --:-- @endif</div>
-                                    <div class="col-6 statistic-content">@if ($bestAo50){{number_format($bestAo50, 2)}} @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($ao50 && $ao50 != 'DNF'){{$ao50}} @elseif ($ao50 == 'DNF') DNF @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($bestAo50){{$bestAo50}} @else --:-- @endif</div>
                                 </div>
                             </div>
                             <div class="single-statistic my-2 p-1">
@@ -242,8 +242,8 @@
                                 <div class="row text-center">
                                     <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
                                     <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
-                                    <div class="col-6 statistic-content">@if ($ao100 && $ao100 != 'DNF'){{number_format($ao100, 2)}} @elseif ($ao100 == 'DNF') DNF @else --:-- @endif</div>
-                                    <div class="col-6 statistic-content">@if ($bestAo100){{number_format($bestAo100, 2)}} @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($ao100 && $ao100 != 'DNF'){{$ao100}} @elseif ($ao100 == 'DNF') DNF @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($bestAo100){{$bestAo100}} @else --:-- @endif</div>
                                 </div>
                             </div>
                         </div>
