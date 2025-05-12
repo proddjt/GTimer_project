@@ -89,35 +89,39 @@ class Timer extends Component
     #[On('firstLoad')]
     public function generateFirstScramble()
     {
-        // $process = new Process([
-        //     'tnoodle.bat',
-        //     'scramble',
-        //     '-p',
-        //     $this->puzzle
-        // ]);
-        // $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
-        // $process->run();
+        $process = new Process([
+            'tnoodle.bat',
+            'scramble',
+            '-p',
+            $this->puzzle
+        ]);
+        $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
+        $process->run();
         // $this->scramble = str_replace(["\r", "\n"], '', $process->getOutput());
-        // $process = new Process([
-        //     'tnoodle.bat',
-        //     'draw',
-        //     '-p',
-        //     $this->puzzle,
-        //     '-s',
-        //     $this->scramble,
-        //     '-o',
-        //     '../../public/img/scrambles/scramble.svg'
-        // ]);
-        // $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
-        // $process->run();
+        $this->scramble = $process->getOutput();
+        $process = new Process([
+            'tnoodle.bat',
+            'draw',
+            '-p',
+            $this->puzzle,
+            '-s',
+            $this->scramble,
+            '-o',
+            '../../public/img/scrambles/scramble.svg'
+        ]);
+        $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
+        $process->run();
         if(Auth::check()){
             $userArray = Auth::user()->times()->where('puzzle', $this->puzzle)->get()->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
-            $this->calculateStatistics($userArray);
+            $arrayForStats = $this->userTimes->map(function ($item) {
+                return array_values($item->toArray());
+            })->toArray();
         }else{
-            $this->calculateStatistics($this->tempTimes);
+            $arrayForStats = $this->tempTimes;
         }
+        $this->calculateStatistics($arrayForStats);
         $this->dispatch('scrambleGenerated');
         $this->newTempScramble($this->puzzle);
     }
@@ -150,15 +154,18 @@ class Timer extends Component
     public function newScramble($time){
         if (!Auth::check()) {
             array_push($this->tempTimes, [$time, date('d-m-Y H:i:s'), $this->scramble, false, false]);
-            $this->calculateStatistics($this->tempTimes);
+            $arrayForStats = $this->tempTimes;
         }else{
             Auth::user()->times()->create(['time' => $time, 'date' => date('d-m-Y H:i:s'), 'scramble' => $this->scramble, 'hasPenalty' => false, 'hasDNF' => false, 'puzzle' => $this->puzzle]);
             $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
-            $userArray = $this->userTimes->map(function ($item) {
+            $arrayForStats = $this->userTimes->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
-            $this->calculateStatistics($userArray);
         }
+        foreach ($arrayForStats as $time) {
+            $time[0] = $this->timeToFloatSeconds($time[0]);
+        }
+        $this->calculateStatistics($arrayForStats);
         $this->scramble = $this->scrambleTable->scramble;
         rename(base_path("public\img\scrambles\scramble-temp.svg"), base_path("public\img\scrambles\scramble.svg"));
         $this->newTempScramble($this->puzzle);
@@ -168,15 +175,18 @@ class Timer extends Component
     public function deleteTime($index){
         if (!Auth::check()) {
             unset($this->tempTimes[$index]);
-            $this->calculateStatistics($this->tempTimes);
+            $arrayForStats = $this->tempTimes;
         }else{
             $this->userTimes[$index]->delete();
             $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
-            $userArray = $this->userTimes->map(function ($item) {
+            $arrayForStats = $this->userTimes->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
-            $this->calculateStatistics($userArray);
         }
+        foreach ($arrayForStats as $time) {
+            $time[0] = $this->timeToFloatSeconds($time[0]);
+        }
+        $this->calculateStatistics($arrayForStats);
         $this->dispatch('DOMRefresh');
     }
 
@@ -189,31 +199,30 @@ class Timer extends Component
     public function addPenalty($index){
         if (!Auth::check() && $this->tempTimes[$index][3] == false) {
             $this->tempTimes[$index][3] = true;
-            $this->calculateStatistics($this->tempTimes);
+            $arrayForStats = $this->tempTimes;
         }else{
             $this->userTimes[$index]->update(['hasPenalty' => true]);
             $this->userTimes[$index]->save();
             $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
-            $userArray = $this->userTimes->map(function ($item) {
+            $arrayForStats = $this->userTimes->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
-            $this->calculateStatistics($userArray);
         }
+        $this->calculateStatistics($arrayForStats);
         $this->dispatch('DOMRefresh');
     }
 
     public function setDNF($index){
         if (!Auth::check()) {
             $this->tempTimes[$index][4] = true;
-            $this->calculateStatistics($this->tempTimes);
+            $arrayForStats = $this->tempTimes;
         }else{
             $this->userTimes[$index]->update(['hasDNF' => true]);
             $this->userTimes[$index]->save();
             $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
-            $userArray = $this->userTimes->map(function ($item) {
+            $arrayForStats = $this->userTimes->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
-            $this->calculateStatistics($userArray);
         }
         $this->dispatch('DOMRefresh');
     }
@@ -222,19 +231,52 @@ class Timer extends Component
         if (!Auth::check()){
             $this->tempTimes[$index][4] = false;
             $this->tempTimes[$index][3] = false;
-            $this->calculateStatistics($this->tempTimes);
+            $arrayForStats = $this->tempTimes;
         }else{
             $this->userTimes[$index]->update(['hasDNF' => false]);
             $this->userTimes[$index]->update(['hasPenalty' => false]);
             $this->userTimes[$index]->save();
             $this->userTimes = Auth::user()->times()->where('puzzle', $this->puzzle)->get();
-            $userArray = $this->userTimes->map(function ($item) {
+            $arrayForStats = $this->userTimes->map(function ($item) {
                 return array_values($item->toArray());
             })->toArray();
-            $this->calculateStatistics($userArray);
         }
+        $this->calculateStatistics($arrayForStats);
         $this->dispatch('DOMRefresh');
     }
+
+    public function timeToFloatSeconds($time) {
+        $time = str_replace(',', '.', $time);
+        $parts = explode(':', $time);
+
+        $hours = 0;
+        $minutes = 0;
+        $seconds = 0;
+        $centiseconds = 0;
+
+        if (count($parts) === 3) {
+            $hours = (int) $parts[0];
+            $minutes = (int) $parts[1];
+            list($seconds, $centiseconds) = $this->explodeCenti($parts[2]);
+        } elseif (count($parts) === 2) {
+            $minutes = (int) $parts[0];
+            list($seconds, $centiseconds) = $this->explodeCenti($parts[1]);
+        } elseif (count($parts) === 1) {
+            list($seconds, $centiseconds) = $this->explodeCenti($parts[0]);
+        }
+
+        return ($hours * 3600) + ($minutes * 60) + $seconds + ($centiseconds / 100);
+    }
+
+    public function explodeCenti($part) {
+    if (strpos($part, '.') !== false) {
+        list($s, $c) = explode('.', $part);
+        return [(int) $s, (int) substr($c . '00', 0, 2)]; // assicura due cifre
+    } else {
+        return [(int) $part, 0];
+    }
+}
+
 
     public function calculateStatistics($array){
         // AO100 AND BEST AO100
@@ -259,9 +301,9 @@ class Timer extends Component
                 $min = array_slice(sort($last100), 0, 5);
                 $minMax = array_merge($min, $max);
                 $filtered = array_diff($last100, $minMax);
-                $this->Ao100 = floor((array_sum($filtered) / count($filtered)) * 100) / 100;
+                $this->Ao100 = timeToSeconds((array_sum($filtered) / count($filtered)));
             }else{
-                $this->Ao100 = '--:--';
+                $this->Ao100 = "DNF";
             }
             $this->bestAo100 = null;
             for ($i = 0; $i <= count($array) - 100; $i++) {
@@ -285,7 +327,7 @@ class Timer extends Component
                     $currentMin = array_slice(sort($current100), 0, 5);
                     $currentMinMax = array_merge($currentMin, $currentMax);
                     $currentFiltered = array_diff($current100, $currentMinMax);
-                    $currentAo100 = floor((array_sum($currentFiltered) / count($currentFiltered)) * 100) / 100;
+                    $currentAo100 = timeToSeconds((array_sum($currentFiltered) / count($currentFiltered)));
                     if ($currentAo100 < $this->bestAo100 || !$this->bestAo100) {
                         $this->bestAo100 = $currentAo100;
                     }
@@ -318,7 +360,7 @@ class Timer extends Component
                 $min = array_slice(sort($last50), 0, 3);
                 $minMax = array_merge($min, $max);
                 $filtered = array_diff($last50, $minMax);
-                $this->Ao50 = floor((array_sum($filtered) / count($filtered)) * 100) / 100;
+                $this->Ao50 = timeToSeconds((array_sum($filtered) / count($filtered)));
             }else{
                 $this->Ao50 = 'DNF';
             }

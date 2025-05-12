@@ -195,8 +195,9 @@ button , .a-button{
     box-shadow: 0px 0px 10px var(--text);
 }
 
-.box-height{
-    height: 40vh;
+.statistics-box{
+    height: 35vh;
+    overflow-y: scroll;
 }
 
 .statistic-title{
@@ -258,6 +259,12 @@ input{
 #deleteSessionBtn, #exportBtn{
     font-size: 1rem;
 }
+
+.times-box{
+    height: 35vh;
+    overflow-y: scroll;
+}
+
 
 /* LOADER */
 

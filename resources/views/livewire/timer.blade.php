@@ -1,5 +1,5 @@
 <div>
-    <div class="container-fluid px-5" id="timer-page">
+    <div class="container-fluid px-5 min-vh-100" id="timer-page">
         <div class="row px-5 py-2">
             <div class="col-6">
                 <h1 class="fw-semibold fst-italic"><span class="text-highlight">GT</span>imer</h1>
@@ -49,62 +49,19 @@
                     </div>
                 </div>
                 <div class="row pt-3">
-                    <div class="col-4 d-flex justify-content-center align-items-center">
-                        <img src="/img/scrambles/scramble.svg?timestamp={{ now()->timestamp }}" alt="Immagine scramble" class="w-50">
+                    <div class="col-2 d-flex justify-content-center align-items-center">
+                        <img src="/img/scrambles/scramble.svg?timestamp={{ now()->timestamp }}" alt="Immagine scramble" class="w-100">
                     </div>
-                    <div class="col-8 d-flex justify-content-center align-items-center">
-                        <p class="fw-semibold scramble text-center m-0">{{$scramble}}</p>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 mt-4 pb-3 me-3 p-2 times-box">
-                        <div class="row text-center text-uppercase">
-                            <div class="col-12 fw-bold fs-4 d-flex justify-content-center align-items-center">
-                                Lista tempi
-                                <button class="button-highlight mx-4" id="exportBtn" data-bs-toggle="modal" data-bs-target="#exportModal"><i class="fa-solid fa-download pe-1"></i>Esporta sessione</button>
-                                <button class="button-main" id="deleteSessionBtn" data-bs-toggle="modal" data-bs-target="#deleteSessionModal"><i class="fa-solid fa-trash-can pe-1"></i>Cancella sessione</button>
-                            </div>
-                            <div class="col-1 fw-semibold pt-2">N.</div>
-                            <div class="col-2 fw-semibold pt-2">Tempo</div>
-                            <div class="col-2 fw-semibold pt-2">Data e ora</div>
-                            <div class="col-5 fw-semibold pt-2">Scramble</div>
-                            <div class="col-2 fw-semibold pt-2">Azioni</div>
-                        </div>
-                        @guest
-                        @foreach ($tempTimes as $time)
-                        <div class="row pt-1 text-center align-items-center">
-                            <div class="col-1 fw-semibold fst-italic fs-5">{{$loop->iteration}}.</div>
-                            <div class="col-2 fw-semibold fst-italic fs-5">@if ($time[3]) {{number_format(($time[0]+2), 2)}} (P) @elseif ($time[4]) DNF @else {{$time[0]}} @endif</div>
-                            <div class="col-2 fw-semibold fst-italic fs-5">{{$time[1]}}</div>
-                            <div class="col-5 fw-semibold fst-italic fs-5">{{$time[2]}}</div>
-                            <div class="col-2">
-                                <button wire:click="deleteTime({{$loop->index}})" class="button-main"><i class="fa-solid fa-trash"></i></button>
-                                <button wire:click="setDNF({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-title="Assegna DNF" data-bs-placement="top">DNF</button>
-                                <button wire:click="addPenalty({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-title="Aggiungi +2" data-bs-placement="top">+2</button>
-                                <button wire:click="setOK({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-title="No penalità" data-bs-placement="top">OK</button>
-                            </div>
-                        </div>
-                        @endforeach
+                    <div class="col-10 d-flex justify-content-center align-items-center">
+                        @if ($puzzle == 'mega')
+                        <p class="m-0"><pre class="fw-semibold scramble text-center">{{$scramble}}</pre></p>
                         @else
-                        @foreach ($userTimes as $time)
-                        <div class="row pt-2 text-center align-items-center">
-                            <div class="col-1 fw-semibold fst-italic fs-5">{{$loop->iteration}}.</div>
-                            <div class="col-2 fw-semibold fst-italic fs-5">@if ($time->hasPenalty) {{number_format(($time->time+2), 2)}} (P) @elseif ($time->hasDNF) DNF @else {{$time->time}} @endif</div>
-                            <div class="col-2 fw-semibold fst-italic fs-5">{{$time->date}}</div>
-                            <div class="col-5 fw-semibold fst-italic small">{{$time->scramble}}</div>
-                            <div class="col-2 small">
-                                <button wire:click="deleteTime({{$loop->index}})" class="button-main"><i class="fa-solid fa-trash"></i></button>
-                                <button wire:click="setDNF({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-title="Assegna DNF" data-bs-placement="top">DNF</button>
-                                <button wire:click="addPenalty({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-title="Aggiungi +2" data-bs-placement="top">+2</button>
-                                <button wire:click="setOK({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-title="No penalità" data-bs-placement="top">OK</button>
-                            </div>
-                        </div>
-                        @endforeach
-                        @endguest
+                        <p class="fw-semibold scramble text-center m-0">{{$scramble}}</p>
+                        @endif
                     </div>
                 </div>
             </div>
-            <div class="col-2 d-flex align-items-center flex-column">
+            <div class="col-2 d-flex align-items-center justify-content-center flex-column">
                 <div class="puzzle-box p-3 d-flex flex-column justify-content-center align-items-center">
                     <p class="d-inline-flex gap-1 px-5 m-0">
                         <button class="button-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#puzzleList">
@@ -141,114 +98,159 @@
                     </div>
                 </p>
             </div>
-            <div class="statistics-box p-3 d-flex flex-column justify-content-center align-items-center mt-3 box-height">
-                <p class="d-inline-flex gap-1 py-0 px-1" id="statisticsText">
-                    <button class="button-transparent fw-bold fs-5 p-0 text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#statisticsList" aria-expanded="true" id="statisticsBtn">Statistiche e record</button>
-                    <div class="collapse show p-1 overflow-y-scroll" id="statisticsList">
-                        <div class="collapse-body row fs-2 justify-content-around align-items-center">
-                            <div class="col-12">
-                                <div class="single-statistic my-2 p-1">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="fw-semibold text-center text-uppercase statistic-title">Sessione</div>
-                                        </div>
-                                    </div>
-                                    <div class="row text-center">
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">N. solve</div>
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Mean</div>
-                                        @guest
-                                        <div class="col-6 statistic-content">@if ($tempTimes){{$validTimes}}/{{count($tempTimes)}} @else 0 @endif</div>
-                                        @else
-                                        <div class="col-6 statistic-content">@if (!$userTimes->isEmpty()){{$validTimes}}/{{count($userTimes)}} @else 0 @endif</div>
-                                        @endguest
-                                        <div class="col-6 statistic-content">@if ($bestSingle){{number_format($bestSingle, 2)}} @else --:-- @endif</div>
-                                    </div>
-                                </div>
-                                <div class="single-statistic my-2 p-1">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="fw-semibold text-center text-uppercase statistic-title">Singolo</div>
-                                        </div>
-                                    </div>
-                                    <div class="row text-center">
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
-                                        <div class="col-6 statistic-content">@if ($single && $single != 'DNF'){{number_format($single, 2)}} @elseif ($single == 'DNF') DNF @else --:-- @endif</div>
-                                        <div class="col-6 statistic-content">@if ($bestSingle){{number_format($bestSingle, 2)}} @else --:-- @endif</div>
-                                    </div>
-                                </div>
-                                <div class="single-statistic my-2 p-1">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="fw-semibold text-center text-uppercase statistic-title">Mean of 3</div>
-                                        </div>
-                                    </div>
-                                    <div class="row text-center">
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
-                                        <div class="col-6 statistic-content">@if ($mo3 && $mo3 != 'DNF'){{number_format($mo3, 2)}} @elseif ($mo3 == 'DNF') DNF @else --:-- @endif</div>
-                                        <div class="col-6 statistic-content">@if ($bestMo3){{number_format($bestMo3, 2)}} @else --:-- @endif</div>
-                                    </div>
-                                </div>
-                                <div class="single-statistic my-2 p-1">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="fw-semibold text-center text-uppercase statistic-title">Average of 5</div>
-                                        </div>
-                                    </div>
-                                    <div class="row text-center">
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
-                                        <div class="col-6 statistic-content">@if ($ao5 && $ao5 != 'DNF'){{number_format($ao5, 2)}} @elseif ($ao5 == 'DNF') DNF @else --:-- @endif</div>
-                                        <div class="col-6 statistic-content">@if ($bestAo5){{number_format($bestAo5, 2)}} @else --:-- @endif</div>
+        </div>   
+    </div>
+    <div class="row mb-2">
+            <div class="col-10 mt-3 pb-3 p-2 times-box">
+                <div class="row text-center text-uppercase">
+                    <div class="col-12 fw-bold fs-4 d-flex justify-content-center align-items-center">
+                        Lista tempi
+                        <button class="button-highlight mx-4" id="exportBtn" data-bs-toggle="modal" data-bs-target="#exportModal"><i class="fa-solid fa-download pe-1"></i>Esporta sessione</button>
+                        <button class="button-main" id="deleteSessionBtn" data-bs-toggle="modal" data-bs-target="#deleteSessionModal"><i class="fa-solid fa-trash-can pe-1"></i>Cancella sessione</button>
+                    </div>
+                    <div class="col-1 fw-semibold pt-2">N.</div>
+                    <div class="col-2 fw-semibold pt-2">Tempo</div>
+                    <div class="col-2 fw-semibold pt-2">Data e ora</div>
+                    <div class="col-5 fw-semibold pt-2">Scramble</div>
+                    <div class="col-2 fw-semibold pt-2">Azioni</div>
+                </div>
+                @guest
+                @foreach ($tempTimes as $time)
+                <div class="row pt-1 text-center align-items-center">
+                    <div class="col-1 fw-semibold fst-italic fs-5">{{$loop->iteration}}.</div>
+                    <div class="col-2 fw-semibold fst-italic fs-5">@if ($time[3]) @if ($time[0] >= 3600) {{gmdate('h:i:s', ($time[0]+2))}} @else {{gmdate('i:s', ($time[0]+2))}} @endif (P) @elseif ($time[4]) DNF @else @if ($time[0] >= 3600) {{gmdate('h:i:s', $time[0])}} @else {{gmdate('i:s', $time[0])}} @endif @endif</div>
+                    <div class="col-2 fw-semibold fst-italic fs-5">{{$time[1]}}</div>
+                    <div class="col-5 fw-semibold fst-italic fs-5">{{$time[2]}}</div>
+                    <div class="col-2">
+                        <button wire:click="deleteTime({{$loop->index}})" class="button-main"><i class="fa-solid fa-trash"></i></button>
+                        <button wire:click="setDNF({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-title="Assegna DNF" data-bs-placement="top">DNF</button>
+                        <button wire:click="addPenalty({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-title="Aggiungi +2" data-bs-placement="top">+2</button>
+                        <button wire:click="setOK({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-title="No penalità" data-bs-placement="top">OK</button>
+                    </div>
+                </div>
+                @endforeach
+                @else
+                @foreach ($userTimes as $time)
+                <div class="row pt-2 text-center align-items-center">
+                    <div class="col-1 fw-semibold fst-italic fs-5">{{$loop->iteration}}.</div>
+                    <div class="col-2 fw-semibold fst-italic fs-5">@if ($time->hasPenalty) @if ($time->time >= 3600) {{gmdate('h:i:s', ($time->time+2))}} @else {{gmdate('i:s', ($time->time+2))}} @endif (P) @elseif ($time->hasDNF) DNF @else @if ($time->time >= 3600) {{gmdate('h:i:s', $time->time)}} @else {{gmdate('i:s', $time->time)}} @endif @endif</div>
+                    <div class="col-2 fw-semibold fst-italic fs-5">{{$time->date}}</div>
+                    <div class="col-5 fw-semibold fst-italic small">{{$time->scramble}}</div>
+                    <div class="col-2 small">
+                        <button wire:click="deleteTime({{$loop->index}})" class="button-main"><i class="fa-solid fa-trash"></i></button>
+                        <button wire:click="setDNF({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-title="Assegna DNF" data-bs-placement="top">DNF</button>
+                        <button wire:click="addPenalty({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-title="Aggiungi +2" data-bs-placement="top">+2</button>
+                        <button wire:click="setOK({{$loop->index}})" class="button-main fw-bold" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-title="No penalità" data-bs-placement="top">OK</button>
+                    </div>
+                </div>
+                @endforeach
+                @endguest
+            </div>
+            <div class="col-2 mt-3 pb-3 p-3 statistics-box">
+                <div class="d-flex flex-column justify-content-center align-items-center">
+                    <div class="row">
+                        <div class="col-12">
+                            <h5 class="text-uppercase text-center fw-bold pb-2">Statistiche e record</h5>
+                            <div class="single-statistic my-2 p-1">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="fw-semibold text-center text-uppercase statistic-title">Sessione</div>
                                     </div>
                                 </div>
-                                <div class="single-statistic my-2 p-1">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="fw-semibold text-center text-uppercase statistic-title">Average of 12</div>
-                                        </div>
-                                    </div>
-                                    <div class="row text-center">
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
-                                        <div class="col-6 statistic-content">@if ($ao12 && $ao12 != 'DNF'){{number_format($ao12, 2)}} @elseif ($ao12 == 'DNF') DNF @else --:-- @endif</div>
-                                        <div class="col-6 statistic-content">@if ($bestAo12){{number_format($bestAo12, 2)}} @else --:-- @endif</div>
+                                <div class="row text-center">
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">N. solve</div>
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Mean</div>
+                                    @guest
+                                    <div class="col-6 statistic-content">@if ($tempTimes){{$validTimes}}/{{count($tempTimes)}} @else 0 @endif</div>
+                                    @else
+                                    <div class="col-6 statistic-content">@if (!$userTimes->isEmpty()){{$validTimes}}/{{count($userTimes)}} @else 0 @endif</div>
+                                    @endguest
+                                    <div class="col-6 statistic-content">@if ($bestSingle){{number_format($bestSingle, 2)}} @else --:-- @endif</div>
+                                </div>
+                            </div>
+                            <div class="single-statistic my-2 p-1">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="fw-semibold text-center text-uppercase statistic-title">Singolo</div>
                                     </div>
                                 </div>
-                                <div class="single-statistic my-2 p-1">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="fw-semibold text-center text-uppercase statistic-title">Average of 50</div>
-                                        </div>
-                                    </div>
-                                    <div class="row text-center">
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
-                                        <div class="col-6 statistic-content">@if ($ao50 && $ao50 != 'DNF'){{number_format($ao50, 2)}} @elseif ($ao50 == 'DNF') DNF @else --:-- @endif</div>
-                                        <div class="col-6 statistic-content">@if ($bestAo50){{number_format($bestAo50, 2)}} @else --:-- @endif</div>
+                                <div class="row text-center">
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
+                                    <div class="col-6 statistic-content">@if ($single && $single != 'DNF'){{number_format($single, 2)}} @elseif ($single == 'DNF') DNF @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($bestSingle){{number_format($bestSingle, 2)}} @else --:-- @endif</div>
+                                </div>
+                            </div>
+                            <div class="single-statistic my-2 p-1">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="fw-semibold text-center text-uppercase statistic-title">Mean of 3</div>
                                     </div>
                                 </div>
-                                <div class="single-statistic my-2 p-1">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="fw-semibold text-center text-uppercase statistic-title">Average of 100</div>
-                                        </div>
+                                <div class="row text-center">
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
+                                    <div class="col-6 statistic-content">@if ($mo3 && $mo3 != 'DNF'){{number_format($mo3, 2)}} @elseif ($mo3 == 'DNF') DNF @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($bestMo3){{number_format($bestMo3, 2)}} @else --:-- @endif</div>
+                                </div>
+                            </div>
+                            <div class="single-statistic my-2 p-1">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="fw-semibold text-center text-uppercase statistic-title">Average of 5</div>
                                     </div>
-                                    <div class="row text-center">
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
-                                        <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
-                                        <div class="col-6 statistic-content">@if ($ao100 && $ao100 != 'DNF'){{number_format($ao100, 2)}} @elseif ($ao100 == 'DNF') DNF @else --:-- @endif</div>
-                                        <div class="col-6 statistic-content">@if ($bestAo100){{number_format($bestAo100, 2)}} @else --:-- @endif</div>
+                                </div>
+                                <div class="row text-center">
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
+                                    <div class="col-6 statistic-content">@if ($ao5 && $ao5 != 'DNF'){{number_format($ao5, 2)}} @elseif ($ao5 == 'DNF') DNF @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($bestAo5){{number_format($bestAo5, 2)}} @else --:-- @endif</div>
+                                </div>
+                            </div>
+                            <div class="single-statistic my-2 p-1">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="fw-semibold text-center text-uppercase statistic-title">Average of 12</div>
                                     </div>
+                                </div>
+                                <div class="row text-center">
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
+                                    <div class="col-6 statistic-content">@if ($ao12 && $ao12 != 'DNF'){{number_format($ao12, 2)}} @elseif ($ao12 == 'DNF') DNF @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($bestAo12){{number_format($bestAo12, 2)}} @else --:-- @endif</div>
+                                </div>
+                            </div>
+                            <div class="single-statistic my-2 p-1">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="fw-semibold text-center text-uppercase statistic-title">Average of 50</div>
+                                    </div>
+                                </div>
+                                <div class="row text-center">
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
+                                    <div class="col-6 statistic-content">@if ($ao50 && $ao50 != 'DNF'){{number_format($ao50, 2)}} @elseif ($ao50 == 'DNF') DNF @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($bestAo50){{number_format($bestAo50, 2)}} @else --:-- @endif</div>
+                                </div>
+                            </div>
+                            <div class="single-statistic my-2 p-1">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="fw-semibold text-center text-uppercase statistic-title">Average of 100</div>
+                                    </div>
+                                </div>
+                                <div class="row text-center">
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Attuale</div>
+                                    <div class="col-6 fw-semibold fst-italic statistic-title">Migliore</div>
+                                    <div class="col-6 statistic-content">@if ($ao100 && $ao100 != 'DNF'){{number_format($ao100, 2)}} @elseif ($ao100 == 'DNF') DNF @else --:-- @endif</div>
+                                    <div class="col-6 statistic-content">@if ($bestAo100){{number_format($bestAo100, 2)}} @else --:-- @endif</div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </p>
+                </div>
             </div>
         </div>
-    </div>
 </div>
 
 {{-- MODALI --}}
@@ -305,17 +307,17 @@
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-12">
-                            <div class="form-check form-switch">
+                            <div class="form-check form-switch pb-2">
                                 <label class="form-check-label fw-semibold" for="switchCheck">Dark mode</label>
                                 <input class="form-check-input" type="checkbox" role="switch" id="switchCheck">
                             </div>
-                            <div>
+                            <div class="pb-2">
                                 <button id="timerSizeInc" class="button-transparent p-0"><i class="bi bi-plus-circle"></i></button>
                                 <input type="number" value="" id="timerSize" step="25" min="50" max="250">
                                 <button id="timerSizeDec" class="button-transparent p-0"><i class="bi bi-dash-circle pe-1"></i></button>
                                 <label for="timerSize" class="fw-semibold">Dimensioni timer (px)</label>
                             </div>
-                            <div>
+                            <div class="pb-2">
                                 <button id="scrambleSizeInc" class="button-transparent p-0"><i class="bi bi-plus-circle"></i></button>
                                 <input type="number" value="" id="scrambleSize" step="5" min="10" max="30">
                                 <button id="scrambleSizeDec" class="button-transparent p-0"><i class="bi bi-dash-circle pe-1"></i></button>

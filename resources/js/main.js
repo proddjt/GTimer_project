@@ -1,3 +1,7 @@
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+dayjs.extend(duration);
+
 let loader = document.querySelector('#loader');
 let timerPage = document.querySelector('#timer-page');
 let timer = document.querySelector('#timer');
@@ -28,7 +32,13 @@ if(timerPage){
     Livewire.on('DOMRefresh', () => {
         setTimeout(() => {
             let timer = document.querySelector('#timer');
-            timer.innerText = actualTime.toFixed(2);
+            if (actualTime >= 3600) {
+                timer.innerText = dayjs.duration(actualTime, 'seconds').format('hh:mm:ss.SSS').slice(0, -1);
+            }else if(actualTime >= 60){
+                timer.innerText = dayjs.duration(actualTime, 'seconds').format('mm:ss.SSS').slice(0, -1);
+            }else{
+                timer.innerText = dayjs.duration(actualTime, 'seconds').format('ss.SSS').slice(0, -1);
+            }
             initializeBootstrap();
             loadSettings();
         }, 10);
@@ -41,7 +51,13 @@ if(timerPage){
         loader.classList.add('d-none');
         setTimeout(() => {
             let timer = document.querySelector('#timer');
-            timer.innerText = actualTime.toFixed(2);
+            if (actualTime >= 3600) {
+                timer.innerText = dayjs.duration(actualTime, 'seconds').format('hh:mm:ss.SSS').slice(0, -1);
+            }else if(actualTime >= 60){
+                timer.innerText = dayjs.duration(actualTime, 'seconds').format('mm:ss.SSS').slice(0, -1);
+            }else{
+                timer.innerText = dayjs.duration(actualTime, 'seconds').format('ss.SSS').slice(0, -1);
+            }
             initializeBootstrap();
             loadSettings();
         }, 10);
@@ -58,7 +74,8 @@ if(timerPage){
             Livewire.dispatch('puzzleChanged');
         })
     });
-        
+    
+       
     document.addEventListener('keydown', (e) => {
         isPressed[e.code] = true;
         if (isPressed['ControlLeft']){
@@ -69,7 +86,7 @@ if(timerPage){
             rightHand.classList.remove('hand-inactive');
             rightHand.classList.add('hand-active');
         }
-        if(isPressed['ControlLeft'] == true && isPressed['ControlRight'] == true && userReady == null && timerStart == false && timerFunction == null && timer.innerText == "0.00") {
+        if(isPressed['ControlLeft'] == true && isPressed['ControlRight'] == true && userReady == null && timerStart == false && timerFunction == null && timer.innerText == "00.00") {
             setLed.classList.add('set-led');
             countdown = 1000;
             userReady = setInterval(() => {
@@ -81,12 +98,16 @@ if(timerPage){
         }
         if (isPressed['ControlLeft'] == true && isPressed['ControlRight'] == true && timerStart == true) {
             clearInterval(timerFunction);
-            actualTime = Number(timer.innerText);
+            if (Number(timer.innerText) >= 3600) {
+                actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('hh:mm:ss.SSS').slice(0, -1);
+            }else{
+                actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('mm:ss.SSS').slice(0, -1);
+            }
             setLed.classList.remove('set-led-blink');
             goLed.classList.remove('go-led-blink');
             setLed.classList.add('inactive-led');
             goLed.classList.add('inactive-led');
-            Livewire.dispatch('timerStopped', {time: actualTime.toFixed(2)});
+            Livewire.dispatch('timerStopped', {time: actualTime});
             timerFunction = null;
             timerStart = false;
             resetBtn.classList.add('d-inline-block');
@@ -139,9 +160,10 @@ if(timerPage){
 
     resetBtn.addEventListener('click', () => {
         actualTime = 0.00
-        timer.innerText = actualTime.toFixed(2);
+        timer.innerText = dayjs.duration(actualTime, 'seconds').format('ss.SSS').slice(0, -1);
     })
 }
+
 function initializeBootstrap(){
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
@@ -331,15 +353,5 @@ if(scrambleSizeInc){
             localStorage.setItem('scramble-size', scrambleSizeInput.value);
             document.documentElement.style.setProperty('--scramble-size', scrambleSizeInput.value + 'px');
         }
-    })
-}
-
-let statisticsBox = document.querySelector('.statistics-box');
-let statisticsText = document.querySelector('#statisticsText');
-let statisticsBtn = document.querySelector('#statisticsBtn');
-if(statisticsBox){
-    statisticsBtn.addEventListener('click', () => {
-        statisticsBox.classList.toggle('box-height');
-        statisticsText.classList.toggle('m-0');
     })
 }
