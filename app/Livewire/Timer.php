@@ -35,7 +35,6 @@ class Timer extends Component
     public $mean = null;
     public $userTimes;
     public $validTimes;
-    public $timestamp;
     
     public function render()
     {
@@ -47,7 +46,6 @@ class Timer extends Component
         $this->puzzle = $this->profile->selectedPuzzle;
         $this->scrambleTable = Temp::where('id', 1)->first();
         $this->userTimes = Auth::check() ? Auth::user()->times()->where('puzzle', $this->puzzle)->get() : null;
-        $this->timestamp = now()->timestamp;
     }
 
     public function exportSession($extension){
@@ -101,13 +99,18 @@ class Timer extends Component
         $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
         $process->run();
         $this->scramble = $process->getOutput();
+        if($this->puzzle == 'mega'){
+            $tempScramble = str_replace(["\n"], '', $this->scramble);
+        }else{
+            $tempScramble = str_replace(["\n", "\r"], '', $this->scramble);
+        }
         $process = new Process([
             'tnoodle.bat',
             'draw',
             '-p',
             $this->puzzle,
             '-s',
-            $this->scramble,
+            $tempScramble,
             '-o',
             '../../public/img/scrambles/scramble.svg'
         ]);
@@ -125,7 +128,6 @@ class Timer extends Component
             $time[0] = $this->timeToFloatSeconds($time[0]);
         }
         $this->calculateStatistics($arrayForStats);
-        $this->timestamp = now()->timestamp;
         $this->dispatch('scrambleGenerated');
         $this->newTempScramble($this->puzzle);
     }
@@ -175,7 +177,6 @@ class Timer extends Component
         $this->calculateStatistics($arrayForStats);
         $this->scramble = $this->scrambleTable->scramble;
         rename(base_path("public\img\scrambles\scramble-temp.svg"), base_path("public\img\scrambles\scramble.svg"));
-        $this->timestamp = now()->timestamp;
         $this->newTempScramble($this->puzzle);
         $this->dispatch('DOMRefresh');
     }

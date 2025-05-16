@@ -37,14 +37,15 @@ class GenerateScramble implements ShouldQueue
         ]);
         $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
         $process->run();
-        $this->scramble = str_replace(["\r", "\n"], '', $process->getOutput());
+        $this->scramble = $process->getOutput();
+        $tempScramble = str_replace(["\n", "\r"], '', $this->scramble);
         $process = new Process([
             'tnoodle.bat',
             'draw',
             '-p',
             $this->puzzle,
             '-s',
-            $this->scramble,
+            $tempScramble,
             '-o',
             '../../public/img/scrambles/scramble-temp.svg'
         ]);

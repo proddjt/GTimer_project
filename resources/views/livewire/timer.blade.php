@@ -50,7 +50,7 @@
                 </div>
                 <div class="row pt-3">
                     <div class="col-2 d-flex justify-content-center align-items-center">
-                        <img src="/img/scrambles/scramble.svg?timestamp={{ $timestamp }}" alt="Immagine scramble" class="w-100">
+                        <img src="/img/scrambles/scramble.svg?timestamp={{ now()->timestamp }}" alt="Immagine scramble" class="w-100">
                     </div>
                     <div class="col-10 d-flex justify-content-center align-items-center">
                         @if ($puzzle == 'mega')
@@ -310,6 +310,10 @@
                             <div class="form-check form-switch pb-2">
                                 <label class="form-check-label fw-semibold" for="switchCheck">Dark mode</label>
                                 <input class="form-check-input" type="checkbox" role="switch" id="switchCheck">
+                            </div>
+                            <div class="form-check form-switch pb-2">
+                                <label class="form-check-label fw-semibold" for="InputSelection" id="inputSelectionText"></label>
+                                <input class="form-check-input" type="checkbox" role="switch" id="inputSelection">
                             </div>
                             <div class="pb-2">
                                 <button id="timerSizeInc" class="button-transparent p-0"><i class="bi bi-plus-circle"></i></button>

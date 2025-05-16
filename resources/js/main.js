@@ -19,6 +19,9 @@ let setLed = document.querySelector('#set');
 let goLed = document.querySelector('#go');
 let leftHand = document.querySelector('#leftHand');
 let rightHand = document.querySelector('#rightHand');
+let inputSelectionSwitch = document.querySelector('#inputSelection');
+let inputSelectionText = document.querySelector('#inputSelectionText');
+let inputSelection;
 
 if(timerPage){
     document.addEventListener('DOMContentLoaded', () => {
@@ -69,43 +72,85 @@ if(timerPage){
         if (isPressed['ControlLeft']){
             leftHand.classList.remove('hand-inactive');
             leftHand.classList.add('hand-active');
-        }
-        if (isPressed['ControlRight']){
-            rightHand.classList.remove('hand-inactive');
-            rightHand.classList.add('hand-active');
-        }
-        if(isPressed['ControlLeft'] == true && isPressed['ControlRight'] == true && userReady == null && timerStart == false && timerFunction == null && timer.innerText == "00.00") {
-            setLed.classList.add('set-led');
-            countdown = 1000;
-            userReady = setInterval(() => {
-                countdown -= 25;
-                if (countdown <= 250) {
-                    goLed.classList.add('go-led');
-                }
-            }, 25);
-        }
-        if (isPressed['ControlLeft'] == true && isPressed['ControlRight'] == true && timerStart == true) {
-            clearInterval(timerFunction);
-            if (Number(timer.innerText) >= 3600) {
-                actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('hh:mm:ss.SSS').slice(0, -1);
-            }else if (Number(timer.innerText) >= 60) {
-                actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('mm:ss.SSS').slice(0, -1);
-            }else{
-                actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('ss.SSS').slice(0, -1);
+        }if (inputSelection == 'ctrl'){
+            if (isPressed['ControlRight']){
+                rightHand.classList.remove('hand-inactive');
+                rightHand.classList.add('hand-active');
             }
-            setLed.classList.remove('set-led-blink');
-            goLed.classList.remove('go-led-blink');
-            setLed.classList.add('inactive-led');
-            goLed.classList.add('inactive-led');
-            Livewire.dispatch('timerStopped', {time: timeToFloatSeconds(actualTime)});
-            timerFunction = null;
-            timerStart = false;
-            resetBtn.classList.add('d-inline-block');
-            resetBtn.classList.remove('d-none');
-            penaltyBtn.classList.add('d-inline-block');
-            penaltyBtn.classList.remove('d-none');
-            dnfBtn.classList.add('d-inline-block');
-            dnfBtn.classList.remove('d-none');
+        }else{
+            if (isPressed['ShiftRight']){
+                rightHand.classList.remove('hand-inactive');
+                rightHand.classList.add('hand-active');
+            }
+        }
+        if (inputSelection == 'ctrl'){
+            if(isPressed['ControlLeft'] == true && isPressed['ControlRight'] == true && userReady == null && timerStart == false && timerFunction == null && timer.innerText == "00.00") {
+                setLed.classList.add('set-led');
+                countdown = 1000;
+                userReady = setInterval(() => {
+                    countdown -= 25;
+                    if (countdown <= 250) {
+                        goLed.classList.add('go-led');
+                    }
+                }, 25);
+            }
+            if (isPressed['ControlLeft'] == true && isPressed['ControlRight'] == true && timerStart == true) {
+                clearInterval(timerFunction);
+                if (Number(timer.innerText) >= 3600) {
+                    actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('hh:mm:ss.SSS').slice(0, -1);
+                }else if (Number(timer.innerText) >= 60) {
+                    actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('mm:ss.SSS').slice(0, -1);
+                }else{
+                    actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('ss.SSS').slice(0, -1);
+                }
+                setLed.classList.remove('set-led-blink');
+                goLed.classList.remove('go-led-blink');
+                setLed.classList.add('inactive-led');
+                goLed.classList.add('inactive-led');
+                Livewire.dispatch('timerStopped', {time: timeToFloatSeconds(actualTime)});
+                timerFunction = null;
+                timerStart = false;
+                resetBtn.classList.add('d-inline-block');
+                resetBtn.classList.remove('d-none');
+                penaltyBtn.classList.add('d-inline-block');
+                penaltyBtn.classList.remove('d-none');
+                dnfBtn.classList.add('d-inline-block');
+                dnfBtn.classList.remove('d-none');
+            }
+        }else{
+            if(isPressed['ControlLeft'] == true && isPressed['ShiftRight'] == true && userReady == null && timerStart == false && timerFunction == null && timer.innerText == "00.00") {
+                setLed.classList.add('set-led');
+                countdown = 1000;
+                userReady = setInterval(() => {
+                    countdown -= 25;
+                    if (countdown <= 250) {
+                        goLed.classList.add('go-led');
+                    }
+                }, 25);
+            }
+            if (isPressed['ControlLeft'] == true && isPressed['ShiftRight'] == true && timerStart == true) {
+                clearInterval(timerFunction);
+                if (Number(timer.innerText) >= 3600) {
+                    actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('hh:mm:ss.SSS').slice(0, -1);
+                }else if (Number(timer.innerText) >= 60) {
+                    actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('mm:ss.SSS').slice(0, -1);
+                }else{
+                    actualTime = dayjs.duration(Number(timer.innerText), 'seconds').format('ss.SSS').slice(0, -1);
+                }
+                setLed.classList.remove('set-led-blink');
+                goLed.classList.remove('go-led-blink');
+                setLed.classList.add('inactive-led');
+                goLed.classList.add('inactive-led');
+                Livewire.dispatch('timerStopped', {time: timeToFloatSeconds(actualTime)});
+                timerFunction = null;
+                timerStart = false;
+                resetBtn.classList.add('d-inline-block');
+                resetBtn.classList.remove('d-none');
+                penaltyBtn.classList.add('d-inline-block');
+                penaltyBtn.classList.remove('d-none');
+                dnfBtn.classList.add('d-inline-block');
+                dnfBtn.classList.remove('d-none');
+            }
         }
     })
 
@@ -115,41 +160,85 @@ if(timerPage){
             leftHand.classList.remove('hand-active');
             leftHand.classList.add('hand-inactive');
         }
-        if (!isPressed['ControlRight']) {
-            rightHand.classList.remove('hand-active');
-            rightHand.classList.add('hand-inactive');
-        }
-        if (!isPressed['ControlLeft'] || !isPressed['ControlRight']) {
-            clearInterval(userReady);
-            userReady = null;
-            setLed.classList.remove('set-led');
-            goLed.classList.remove('go-led');
-            setLed.classList.add('inactive-led');
-            goLed.classList.add('inactive-led');
-            if(countdown <= 250) {
-                timerStart = true;
-                countdown = 1000;
-                setLed.classList.remove('inactive-led');
-                setLed.classList.add('set-led-blink');
-                goLed.classList.remove('inactive-led');
-                goLed.classList.add('go-led-blink');
-                resetBtn.classList.remove('d-inline-block');
-                resetBtn.classList.add('d-none');
-                penaltyBtn.classList.remove('d-inline-block');
-                penaltyBtn.classList.add('d-none');
-                dnfBtn.classList.remove('d-inline-block');
-                dnfBtn.classList.add('d-none');
-                let startTime = 0.00;
-                timerFunction = setInterval(() => {
-                    startTime += 10;
-                    if (startTime < 60000){
-                        timer.innerText = dayjs.duration(startTime, 'milliseconds').format('ss.SSS').slice(0, -1);
-                    }else if(startTime < 3600000){
-                        timer.innerText = dayjs.duration(startTime, 'milliseconds').format('mm:ss.SSS').slice(0, -1);
-                    }else{
-                        timer.innerText = dayjs.duration(startTime, 'milliseconds').format('hh:mm:ss.SSS').slice(0, -1);
-                    }
-                }, 10)
+        if (inputSelection == 'ctrl'){
+            if (!isPressed['ControlRight']) {
+                rightHand.classList.remove('hand-active');
+                rightHand.classList.add('hand-inactive');
+            }
+            if (!isPressed['ControlLeft'] || !isPressed['ControlRight']) {
+                clearInterval(userReady);
+                userReady = null;
+                setLed.classList.remove('set-led');
+                goLed.classList.remove('go-led');
+                setLed.classList.add('inactive-led');
+                goLed.classList.add('inactive-led');
+                if(countdown <= 250) {
+                    timerStart = true;
+                    countdown = 1000;
+                    setLed.classList.remove('inactive-led');
+                    setLed.classList.add('set-led-blink');
+                    goLed.classList.remove('inactive-led');
+                    goLed.classList.add('go-led-blink');
+                    resetBtn.classList.remove('d-inline-block');
+                    resetBtn.classList.add('d-none');
+                    penaltyBtn.classList.remove('d-inline-block');
+                    penaltyBtn.classList.add('d-none');
+                    dnfBtn.classList.remove('d-inline-block');
+                    dnfBtn.classList.add('d-none');
+                    let startTime = 0.00;
+                    timerFunction = setInterval(() => {
+                        startTime += 10;
+                        if (startTime < 60000){
+                            timer.innerText = dayjs.duration(startTime, 'milliseconds').format('ss.SSS').slice(0, -1);
+                        }else if(startTime < 3600000){
+                            timer.innerText = dayjs.duration(startTime, 'milliseconds').format('mm:ss.SSS').slice(0, -1);
+                        }else{
+                            timer.innerText = dayjs.duration(startTime, 'milliseconds').format('hh:mm:ss.SSS').slice(0, -1);
+                        }
+                    }, 10)
+                }
+            }    
+        }else{
+            console.log(e.code);
+            console.log(inputSelection);
+            if (!isPressed['ShiftRight']){
+                console.log('ciao');
+                
+                rightHand.classList.add('hand-inactive');
+                rightHand.classList.remove('hand-active');
+            }
+            if (!isPressed['ControlLeft'] || !isPressed['ShiftRight']) {
+                clearInterval(userReady);
+                userReady = null;
+                setLed.classList.remove('set-led');
+                goLed.classList.remove('go-led');
+                setLed.classList.add('inactive-led');
+                goLed.classList.add('inactive-led');
+                if(countdown <= 250) {
+                    timerStart = true;
+                    countdown = 1000;
+                    setLed.classList.remove('inactive-led');
+                    setLed.classList.add('set-led-blink');
+                    goLed.classList.remove('inactive-led');
+                    goLed.classList.add('go-led-blink');
+                    resetBtn.classList.remove('d-inline-block');
+                    resetBtn.classList.add('d-none');
+                    penaltyBtn.classList.remove('d-inline-block');
+                    penaltyBtn.classList.add('d-none');
+                    dnfBtn.classList.remove('d-inline-block');
+                    dnfBtn.classList.add('d-none');
+                    let startTime = 0.00;
+                    timerFunction = setInterval(() => {
+                        startTime += 10;
+                        if (startTime < 60000){
+                            timer.innerText = dayjs.duration(startTime, 'milliseconds').format('ss.SSS').slice(0, -1);
+                        }else if(startTime < 3600000){
+                            timer.innerText = dayjs.duration(startTime, 'milliseconds').format('mm:ss.SSS').slice(0, -1);
+                        }else{
+                            timer.innerText = dayjs.duration(startTime, 'milliseconds').format('hh:mm:ss.SSS').slice(0, -1);
+                        }
+                    }, 10)
+                }
             }
         }
     })
@@ -286,6 +375,20 @@ if(modeSwitch){
     })
 }
 
+if(inputSelectionSwitch){
+    inputSelectionSwitch.addEventListener('change', () =>{
+        if (inputSelectionSwitch.checked === true) {
+            inputSelectionText.innerText = 'CTRL + SHIFT'
+            inputSelection = 'shift'
+            localStorage.setItem('input-mode', 'shift');
+        }else{
+            inputSelectionText.innerText = 'CTRL + CTRL'
+            inputSelection = 'ctrl'
+            localStorage.setItem('input-mode', 'ctrl');
+        }
+    })
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
 })
@@ -317,6 +420,21 @@ function loadSettings(){
             modeSwitch.checked = false;
         }
         setLightMode();
+    }
+    if (!localStorage.getItem('input-mode')){
+        localStorage.setItem('input-mode', 'ctrl');
+        inputSelectionText.innerText = 'CTRL + CTRL'
+        inputSelectionSwitch.checked = true;
+        inputSelection = 'ctrl'
+    }else{
+        inputSelection = localStorage.getItem('input-mode');
+        if (inputSelection == 'ctrl'){
+            inputSelectionText.innerText = 'CTRL + CTRL'
+            inputSelectionSwitch.checked = false;
+        }else{
+            inputSelectionText.innerText = 'CTRL + SHIFT'
+            inputSelectionSwitch.checked = true;
+        }
     }
 }
 
