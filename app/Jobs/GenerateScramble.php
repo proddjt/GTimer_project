@@ -38,7 +38,12 @@ class GenerateScramble implements ShouldQueue
         $process->setWorkingDirectory(base_path("tnoodle-cli-win_x64\bin"));
         $process->run();
         $this->scramble = $process->getOutput();
-        $tempScramble = str_replace(["\n", "\r"], '', $this->scramble);
+        if($this->puzzle == 'mega'){
+            $tempScramble = str_replace(["\n"], ' ', $this->scramble);
+            $tempScramble = str_replace(["\r"], '', $tempScramble);
+        }else{
+            $tempScramble = str_replace(["\n", "\r"], '', $this->scramble);
+        }
         $process = new Process([
             'tnoodle.bat',
             'draw',
