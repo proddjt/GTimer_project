@@ -50,7 +50,11 @@ class Timer extends Component
 
     public function exportSession($extension){
         if (!Auth::check()) {
-            $array = $this->tempTimes;
+            foreach ($this->tempTimes as $time) {
+                if ($time[4] == true) {
+                    
+                }
+            }
             if ($extension == 'csv') {
                 $filename = 'guest' . '-' . $this->puzzle . '-temp-times-' . date('d-m-Y') . '.csv';
             }else{
@@ -100,7 +104,8 @@ class Timer extends Component
         $process->run();
         $this->scramble = $process->getOutput();
         if($this->puzzle == 'mega'){
-            $tempScramble = str_replace(["\n"], '', $this->scramble);
+            $tempScramble = str_replace(["\n"], ' ', $this->scramble);
+            $tempScramble = str_replace(["\r"], '', $tempScramble);
         }else{
             $tempScramble = str_replace(["\n", "\r"], '', $this->scramble);
         }
